@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import Playgrounds
 
-struct ContentView1: View {
+struct CompletionView1: View {
     var body: some View {
         
         
@@ -18,7 +18,7 @@ struct ContentView1: View {
             
             VStack{
                 
-                Image(.firstpic)
+                Image(.completionFlower)
                     .resizable()
                     .frame(width: 120, height: 160)
                 
@@ -54,7 +54,7 @@ struct ContentView1: View {
 }
 
 #Preview {
-    ContentView1()
+    CompletionView1()
 }
 
 #Playground {
