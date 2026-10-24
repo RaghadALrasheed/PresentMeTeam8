@@ -10,33 +10,18 @@ import SwiftUI
 struct EarlyCompletionView: View {
     
     let completedMinutes: Int
+    let flowerProgressMinutes: Int
     
-    var onPlantFlower: () -> Void = {}
+    var onViewGarden: () -> Void = {}
     var onBackHome: () -> Void = {}
     
-    var earnedFlowerMinutes: Int {
-        if completedMinutes >= 30 {
-            return 30
-        } else if completedMinutes >= 15 {
-            return 15
-        } else if completedMinutes >= 10 {
-            return 10
-        } else if completedMinutes >= 5 {
-            return 5
-        } else if completedMinutes >= 2 {
-            return 2
-        } else {
-            return 0
-        }
-    }
 
-    @State private var isPlanting = false
     
     
-    var workoutResult: (completed: Int, flower: Int) {
+    var workoutResult: (completed: Int, progress: Int) {
         (
             completed: completedMinutes,
-            flower: earnedFlowerMinutes
+            progress: flowerProgressMinutes
         )
     }
 
@@ -66,7 +51,7 @@ struct EarlyCompletionView: View {
                         .foregroundStyle(BloomoveColors.secondaryText)
 
                     Text("\(completedMinutes) Min")
-                        .font(.system(size: 40, weight: .bold))
+                        .font(.system(size: 36, weight: .bold))
                         .foregroundStyle(BloomoveColors.darkGreen)
                 }
                 .frame(maxWidth: .infinity)
@@ -76,31 +61,22 @@ struct EarlyCompletionView: View {
                 .padding(.horizontal, 24)
                 
                 
-                if earnedFlowerMinutes > 0 {
-                    Text("You've earned a \(earnedFlowerMinutes)-minute flower!")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(BloomoveColors.darkGreen)
-                        .multilineTextAlignment(.center)
-                } else {
-                    Text("Every minute counts. Keep blooming!")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(BloomoveColors.secondaryText)
-                        .multilineTextAlignment(.center)
-                    }
+                Text("Your flower is growing! 🌱")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(BloomoveColors.darkGreen)
+                    .multilineTextAlignment(.center)
 
-                Spacer(minLength: 20)
-                 if earnedFlowerMinutes > 0 {
-                   
-                    
-                     Button {
-                         guard !isPlanting else { return }
+                Text("Flower Growth: \(flowerProgressMinutes) / 30 min")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(BloomoveColors.darkGreen)
+                    .multilineTextAlignment(.center)
+                Spacer()
+                    .frame(height: 36)
+                Button {
+                    onViewGarden()
+                } label: {
 
-                         isPlanting = true
-                         onPlantFlower()
-                     } label: {
-
-                         Text("Plant Your Flower")
-
+                         Text("View My Garden")
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -109,9 +85,8 @@ struct EarlyCompletionView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 18))
                     }
          
-                     .disabled(isPlanting)
                     .padding(.horizontal, 24)
-                }
+               
 
 
                 Button {
@@ -124,6 +99,7 @@ struct EarlyCompletionView: View {
                         .frame(height: 50)
                 }
                 .padding(.horizontal, 24)
+            }
 
 
                 
@@ -132,9 +108,11 @@ struct EarlyCompletionView: View {
         }
 
     }
-}
 
 
 #Preview {
-    EarlyCompletionView(completedMinutes: 13)
+    EarlyCompletionView(
+        completedMinutes: 3,
+        flowerProgressMinutes: 13
+    )
 }
