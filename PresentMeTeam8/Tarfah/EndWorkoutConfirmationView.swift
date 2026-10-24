@@ -10,29 +10,15 @@ import SwiftUI
 struct EndWorkoutConfirmationView: View {
     
     
-    let totalMinutes: Int = 10
-    let completedMinutes: Int = 6
+    let totalMinutes: Int
+    let completedMinutes: Int
 
     var remainingMinutes: Int {
         max(0, totalMinutes - completedMinutes)
     }
-   // Flower Selected
+ 
     
-    var earnedFlowerMinutes: Int {
-        if completedMinutes >= 30 {
-            return 30
-        } else if completedMinutes >= 15 {
-            return 15
-        } else if completedMinutes >= 10 {
-            return 10
-        } else if completedMinutes >= 5 {
-            return 5
-        } else if completedMinutes >= 2 {
-            return 2
-        } else {
-            return 0
-        }
-    }
+   
 
     
     
@@ -138,5 +124,8 @@ struct EndWorkoutConfirmationView: View {
 }
 
 #Preview {
-    EndWorkoutConfirmationView()
+    EndWorkoutConfirmationView(
+        totalMinutes: 10,
+        completedMinutes: 6
+    )
 }
