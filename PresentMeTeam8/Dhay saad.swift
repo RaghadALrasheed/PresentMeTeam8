@@ -93,6 +93,9 @@ struct Dhay22: View {
                 .padding(.bottom, 6)
             }
             .toolbar(.hidden, for: .navigationBar)
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("goHome"))) { _ in
+                showMood = false
+            }
             .navigationDestination(isPresented: $showMood) {
                 MoodPage()
             }
