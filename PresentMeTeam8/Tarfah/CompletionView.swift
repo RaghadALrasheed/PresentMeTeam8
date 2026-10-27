@@ -10,12 +10,21 @@
 import SwiftUI
 
 struct CompletionView: View {
+    @ObservedObject var gardenManager: GardenProgressManager
+    let workoutSessionID: String
     let completedMinutes: Int
     let flowerProgressMinutes: Int
     
     let onViewGarden: () -> Void
     let onBackHome: () -> Void
   
+    private func saveCompletedWorkout() {
+        gardenManager.recordWorkout(
+            id: workoutSessionID,
+            completedMinutes: completedMinutes
+        )
+    }
+    
     var body: some View {
         ZStack {
             BloomoveColors.background
@@ -53,11 +62,25 @@ struct CompletionView: View {
                 
                 
                 VStack(spacing: 8) {
-                    Text("Your flower is growing! 🌱")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(BloomoveColors.darkGreen)
+                    Text(
+                        gardenManager.hasGrowingFlower
+                            ? "Your flower is growing! 🌱"
+                            : gardenManager.availableMinutes >= 2
+                                ? "Ready to plant your next flower! 🌸"
+                                : flowerProgressMinutes >= 30
+                                    ? "Your flower has fully bloomed! 🌷"
+                                    : "Start growing your flower! 🌱"
+                    )
 
-                    Text("Flower Growth: \(flowerProgressMinutes) / 30 min")
+                    Text(
+                        gardenManager.hasGrowingFlower
+                            ? "Flower Growth: \(flowerProgressMinutes) / 30 min"
+                            : gardenManager.availableMinutes >= 2
+                                ? "Available Minutes: \(gardenManager.availableMinutes) min"
+                                : flowerProgressMinutes >= 30
+                                    ? "Flower Growth: 30 / 30 min"
+                                    : "Available Minutes: \(gardenManager.availableMinutes) min"
+                    )
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(BloomoveColors.darkGreen)
                 }
@@ -98,9 +121,11 @@ struct CompletionView: View {
     }
 }
 #Preview {
-    CompletionView (
+    CompletionView(
+        gardenManager: GardenProgressManager(),
+        workoutSessionID: "preview-workout-001",
         completedMinutes: 10,
-        flowerProgressMinutes: 23,
+        flowerProgressMinutes: 22,
         onViewGarden: {},
         onBackHome: {}
     )

@@ -9,6 +9,10 @@ import SwiftUI
 
 struct EarlyCompletionView: View {
     
+    @ObservedObject var gardenManager: GardenProgressManager
+
+    let workoutSessionID: String
+    
     let completedMinutes: Int
     let flowerProgressMinutes: Int
     
@@ -22,6 +26,13 @@ struct EarlyCompletionView: View {
         (
             completed: completedMinutes,
             progress: flowerProgressMinutes
+        )
+    }
+    
+    private func saveCompletedWorkout() {
+        gardenManager.recordWorkout(
+            id: workoutSessionID,
+            completedMinutes: completedMinutes
         )
     }
 
@@ -61,12 +72,28 @@ struct EarlyCompletionView: View {
                 .padding(.horizontal, 24)
                 
                 
-                Text("Your flower is growing! 🌱")
+                Text(
+                    gardenManager.hasGrowingFlower
+                        ? "Your flower is growing! 🌱"
+                        : gardenManager.availableMinutes >= 2
+                            ? "Ready to plant your next flower! 🌸"
+                            : flowerProgressMinutes >= 30
+                                ? "Your flower has fully bloomed! 🌷"
+                                : "Start growing your flower! 🌱"
+                )
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(BloomoveColors.darkGreen)
                     .multilineTextAlignment(.center)
 
-                Text("Flower Growth: \(flowerProgressMinutes) / 30 min")
+                Text(
+                    gardenManager.hasGrowingFlower
+                        ? "Flower Growth: \(flowerProgressMinutes) / 30 min"
+                        : gardenManager.availableMinutes >= 2
+                            ? "Available Minutes: \(gardenManager.availableMinutes) min"
+                            : flowerProgressMinutes >= 30
+                                ? "Flower Growth: 30 / 30 min"
+                                : "Available Minutes: \(gardenManager.availableMinutes) min"
+                )
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(BloomoveColors.darkGreen)
                     .multilineTextAlignment(.center)
@@ -112,6 +139,8 @@ struct EarlyCompletionView: View {
 
 #Preview {
     EarlyCompletionView(
+        gardenManager: GardenProgressManager(),
+        workoutSessionID: "preview-early-workout-001",
         completedMinutes: 3,
         flowerProgressMinutes: 13
     )
