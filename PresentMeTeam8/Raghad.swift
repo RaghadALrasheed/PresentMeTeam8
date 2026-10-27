@@ -33,7 +33,7 @@ struct Raghad1: View {
                                             lineWidth: 4
                                         )
                                 }
-
+//عدلي الوقت حسب التمرين كامل
                             Text("05:00")
                                 .font(.system(size: 40))
                                 .foregroundStyle(Theme.textDark)

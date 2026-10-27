@@ -2,8 +2,46 @@ import Foundation
 import SwiftUI
 
 struct workoutView: View {
+    //عدلي الثواني على حسب تمرينك
     @State private var secondsRemaining = 300
     @State private var isPaused = false
+    @State private var didEndEarly = false
+    @State private var showResultAlert = false
+    
+    private var currentExercise: Int {
+        if secondsRemaining > 240 {
+            return 0
+        } else if secondsRemaining > 120 {
+            return 1
+        } else if secondsRemaining > 60 {
+            return 2
+        } else if secondsRemaining > 0 {
+            return 3
+        } else {
+            return 4
+        }
+    }
+
+    private let exerciseNames = [
+        "Marching",
+        "Standing Hamstring Curls",
+        "knee Lifts",
+        "Cool-down"
+    ]
+
+    private let exerciseImages = [
+        "marching Exercise",
+        "standing Hamstring Curls",
+        "knee lifts",
+        "Cool-down"
+    ]
+
+    private let exerciseDescriptions = [
+        "Stand tall and march in place, lifting your knees alternately to a comfortable height while swinging your arms naturally.",
+        "Stand tall, bend one knee to bring your heel toward your buttocks, then lower and alternate legs.",
+        "Stand tall, lift one knee forward to a comfortable height, then lower it slowly and alternate legs.",
+        ""
+    ]
 
     var body: some View {
         ZStack {
@@ -11,31 +49,46 @@ struct workoutView: View {
                 .ignoresSafeArea()
 
             VStack(spacing:4) {
-
+//عدلي اسم التمرين الاساسي
                 Text("Switch My Vibe")
                     .font(.system(size: 34))
                     .foregroundStyle(Theme.textDark)
-                Text("1 min Marching")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Theme.textDark)
                 
-                Image("Marching Exercise")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 260)
-                    .clipShape(
-                        RoundedRectangle(cornerRadius: 20)
-                    )
+                Text(
+                    currentExercise < 4
+                    ? ["1 min Marching",
+                       "2 min Standing Hamstring Curls",
+                       "1 min Knee Lifts",
+                       "1 min Cool-down"][currentExercise]
+                    : "Workout Complete"
+                )
+                .font(.system(size: 16))
+                .foregroundStyle(Theme.textDark)
 
-                VStack(spacing: 10) {
-                    Text("Stand tall and march in place, lifting your knees alternately to a comfortable height while swinging your arms naturally.")
-                        .font(.system(size: 15))
-                        .foregroundStyle(Theme.textMuted)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 10)
+                //غيري الصوره
+                if currentExercise < 4 {
+                    Image(exerciseImages[currentExercise])
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 280)
+                        .clipped()
+                        .clipShape(
+                            RoundedRectangle(cornerRadius: 20)
+                        )
                 }
-                .frame(maxWidth: .infinity)
+//عدلي وصف التمرين من هنا
+               
+                if currentExercise < 4 {
+                    VStack(spacing: 10) {
+                        Text(exerciseDescriptions[currentExercise])
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.textMuted)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 10)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
 
                 ZStack {
                     Circle()
@@ -59,7 +112,7 @@ struct workoutView: View {
                 .padding(.top, 16)
                 HStack {
 
-                    // زر Pause / Resume
+                   
                     VStack(spacing: 8) {
                         Button {
                             isPaused.toggle()
@@ -79,10 +132,12 @@ struct workoutView: View {
 
                     Spacer()
 
-                    // زر End
+                  
                     VStack(spacing: 8) {
                         Button {
-                            secondsRemaining = 0
+                            didEndEarly = true
+                            isPaused = true
+                            showResultAlert = true
                         } label: {
                             Image(systemName: "stop.fill")
                                 .font(.system(size: 28))
@@ -111,7 +166,27 @@ struct workoutView: View {
 
                 if !isPaused {
                     secondsRemaining -= 1
+
+                    if secondsRemaining == 0 {
+                        didEndEarly = false
+                        showResultAlert = true
+                    }
                 }
+            }
+        }
+        
+        .alert(
+            didEndEarly ? "Workout Ended" : "Workout Complete",
+            isPresented: $showResultAlert
+        ) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            if didEndEarly {
+                Text(
+                    "You ended the workout early. \(secondsRemaining / 60) minutes and \(secondsRemaining % 60) seconds remaining."
+                )
+            } else {
+                Text("Great job! You completed the full 5-minute workout.")
             }
         }
     }
