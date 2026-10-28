@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct HomePage: View {
-    @AppStorage("totalMinutes") private var totalMinutes = 0
+    @EnvironmentObject var gardenManager: GardenProgressManager
     @State private var showMood = false
+    // Controls whether the Garden screen is displayed.
+    @State private var showGarden = false
 
     // الألوان
     private let accent = Color(red: 184/255, green: 76/255, blue: 112/255)       // #B84C70
@@ -30,20 +32,25 @@ struct HomePage: View {
                         .foregroundColor(subtitleColor)
                         .padding(.top, 4)
 
-                    Image(.garden)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 330)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .padding(.top, 24)
+                   
+                    // Open the interactive garden when the preview is tapped.
+                    Button {
+                        showGarden = true
+                    } label: {
+
+                        // Display the existing live garden preview with saved flower progress.
+                        GardenPreviewView(gardenManager: gardenManager)
+                            .frame(height: 330)
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 24)
 
                     VStack(spacing: 4) {
                         Text("Total Activity Minutes")
                             .font(.system(size: 16))
                             .foregroundColor(subtitleColor)
-                        Text("\(totalMinutes) mins")
-                            .font(.system(size: 24, weight: .bold))
+                        Text("\(gardenManager.totalActivityMinutes) mins")                            .font(.system(size: 24, weight: .bold))
                             .foregroundColor(titleColor)
                     }
                     .frame(maxWidth: .infinity)
@@ -51,9 +58,7 @@ struct HomePage: View {
                     .background(statsCard)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .padding(.top, 18)
-                    .onLongPressGesture {
-                        totalMinutes = 0
-                    }
+                   
 
                     Button {
                         showMood = true
@@ -91,6 +96,10 @@ struct HomePage: View {
                     }
                     .foregroundColor(subtitleColor)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // Open the interactive garden when the Garden tab is tapped.
+                    .onTapGesture {
+                        showGarden = true
+                    }
                 }
                 .padding(4)
                 .frame(height: 62)
@@ -98,6 +107,10 @@ struct HomePage: View {
                 .shadow(color: .black.opacity(0.1), radius: 8, y: 2)
                 .padding(.horizontal, 21)
                 .padding(.bottom, 6)
+            }
+            // Show the real garden using the same shared progress manager.
+            .sheet(isPresented: $showGarden) {
+                TarfahGardenView(gardenManager: gardenManager)
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(isPresented: $showMood) {
@@ -109,4 +122,5 @@ struct HomePage: View {
 
 #Preview {
     HomePage()
+        .environmentObject(GardenProgressManager())
 }

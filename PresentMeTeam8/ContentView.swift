@@ -1,24 +1,18 @@
-//
-//  ContentView.swift
-//  PresentMeTeam8
-//
-//  Created by Raghad Alrasheed on 10/05/1448 AH.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+
+    // Access the shared garden progress manager.
+    @EnvironmentObject var gardenManager: GardenProgressManager
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+
+        // Launch the Home screen to test navigation and garden progress.
+        HomePage()
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(GardenProgressManager())
 }
