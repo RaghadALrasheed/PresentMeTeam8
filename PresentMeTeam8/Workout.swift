@@ -3,7 +3,21 @@ import SwiftUI
 
 struct workoutView: View {
     //عدلي الثواني على حسب تمرينك
-    @State private var secondsRemaining = 300
+    // The workout duration selected by the user, in minutes.
+    let durationMinutes: Int
+    // Store the workout category selected by the user.
+    let selectedMood: String
+
+    // Track the remaining workout time in seconds.
+    @State private var secondsRemaining: Int
+
+    // Initialize the workout using the selected category and duration.
+    init(selectedMood: String = "Switch My Vibe", durationMinutes: Int = 5) {
+        self.selectedMood = selectedMood
+        self.durationMinutes = durationMinutes
+        _secondsRemaining = State(initialValue: durationMinutes * 60)
+    }
+    
     @State private var isPaused = false
     @State private var didEndEarly = false
     @State private var showResultAlert = false
@@ -50,7 +64,8 @@ struct workoutView: View {
 
             VStack(spacing:4) {
 //عدلي اسم التمرين الاساسي
-                Text("Switch My Vibe")
+                // Display the workout category chosen on the Mood screen.
+                Text(selectedMood)
                     .font(.system(size: 34))
                     .foregroundStyle(Theme.textDark)
                 

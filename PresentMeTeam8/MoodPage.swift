@@ -106,15 +106,23 @@ struct MoodPage: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .toolbar(.hidden, for: .navigationBar)
+        // Navigate to the time selection screen using the selected mood.
+        // Reset the selection when the user navigates back.
         .navigationDestination(isPresented: Binding(
             get: { goTo != nil },
-            set: { if !$0 { goTo = nil; selectedMood = nil } }
+            set: { isPresented in
+                if !isPresented {
+                    goTo = nil
+                    selectedMood = nil
+                }
+            }
         )) {
-            TimePageView()
+            TimePageView(selectedMood: goTo ?? "Switch My Vibe")
         }
     }
 }
 
+// Preview the Mood screen inside a navigation container.
 #Preview {
     NavigationStack {
         MoodPage()

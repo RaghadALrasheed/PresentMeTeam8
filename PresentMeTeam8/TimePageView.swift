@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct TimePageView: View {
+    let selectedMood: String
+   
     @Environment(\.dismiss) private var dismiss
     @State private var selectedMinutes: Int = 10
+    // Controls navigation from the time selection screen to the workout.
+    @State private var showWorkout = false
 
     private let options = [2, 5, 10]
 
@@ -34,7 +38,8 @@ struct TimePageView: View {
 
                 // MARK: - Continue
                 Button {
-                    print("Selected: \(selectedMinutes) min")
+                    // Navigate to the workout using the selected duration.
+                    showWorkout = true
                 } label: {
                     Text("Continue")
                         .font(.title3)
@@ -49,6 +54,14 @@ struct TimePageView: View {
             .padding(.bottom, 16)
         }
         .navigationBarBackButtonHidden(true)
+        // Open the workout screen with the selected duration.
+        .navigationDestination(isPresented: $showWorkout) {
+            // Pass both the selected category and duration to the workout screen.
+            workoutView(
+                selectedMood: selectedMood,
+                durationMinutes: selectedMinutes
+            )
+        }
     }
 
     // MARK: - Option row
@@ -98,8 +111,9 @@ struct TimePageView: View {
     }
 }
 
+// Preview the time selection screen using a sample workout category.
 #Preview {
     NavigationStack {
-        TimePageView()
+        TimePageView(selectedMood: "Switch My Vibe")
     }
 }

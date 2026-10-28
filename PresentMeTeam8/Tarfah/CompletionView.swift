@@ -118,6 +118,12 @@ struct CompletionView: View {
             .padding(.top, 40)
             .padding(.bottom, 20)
         }
+        
+        // Save the completed workout when the completion screen appears.
+        // The session ID prevents the same workout from being counted twice.
+        .onAppear {
+            saveCompletedWorkout()
+        }
     }
 }
 #Preview {
