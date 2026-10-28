@@ -29,30 +29,29 @@ struct MyGardensView: View {
                                 CompletedGardenDetailView(garden: garden)
                             } label: {
                                 
-                            HStack {
-                                Image(systemName: "leaf.fill")
-                                    .foregroundStyle(BloomoveColors.darkGreen)
-
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("Garden \(index + 1)")
-                                        .font(.headline)
-
-                                    Text("\(garden.flowers.count) Flowers")
-                                        .font(.subheadline)
-                                        .foregroundStyle(BloomoveColors.secondaryText)
+                                HStack {
+                                    Image(systemName: "leaf.fill")
+                                        .foregroundStyle(BloomoveColors.darkGreen)
+                                    
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text("Garden \(index + 1)")
+                                            .font(.headline)
+                                        
+                                        Text("\(garden.flowers.count) Flowers")
+                                            .font(.subheadline)
+                                            .foregroundStyle(BloomoveColors.secondaryText)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .foregroundStyle(BloomoveColors.primaryPink)
                                 }
-
-                                Spacer()
-
-                                Image(systemName: "chevron.right")
-                                    .foregroundStyle(BloomoveColors.primaryPink)
-                            }
-                            .padding()
-                            .background(Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .padding()
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
                                 
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                     .padding(.horizontal, 20)
