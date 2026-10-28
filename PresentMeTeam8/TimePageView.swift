@@ -65,19 +65,15 @@ struct TimePageView: View {
         .navigationDestination(isPresented: $showWorkout) {
             // Open the correct workout flow for each selected mood.
             if selectedMood == "Bloom with Energy" {
-
                 WorkoutStartPage(minutes: selectedMinutes)
 
             } else if selectedMood == "Find My Calm" {
-
                 FindMyCalmReady(minutes: selectedMinutes)
 
             } else if selectedMood == "Easy Flow" {
-
                 EasyFlowReady(minutes: selectedMinutes)
 
-            } else {
-
+            } else if selectedMood == "Switch My Vibe" {
                 workoutView(
                     selectedMood: selectedMood,
                     durationMinutes: selectedMinutes
