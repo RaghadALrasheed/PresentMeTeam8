@@ -63,14 +63,20 @@ struct TimePageView: View {
         }
         // Open the correct workout flow based on the selected category.
         .navigationDestination(isPresented: $showWorkout) {
+            // Open the correct workout system for each selected mood.
+
             if selectedMood == "Bloom with Energy" {
-                
-                // Show the preparation screen for the longer energy workouts.
+
                 WorkoutStartPage(minutes: selectedMinutes)
-                
+
+            } else if selectedMood == "Find My Calm" {
+
+                // Open Find My Calm with its own exercises and durations.
+                FindMyCalmReady(minutes: selectedMinutes)
+
             } else {
-                
-                // Use the existing workout screen for the other categories.
+
+                // Keep the existing flow for the remaining categories.
                 workoutView(
                     selectedMood: selectedMood,
                     durationMinutes: selectedMinutes
@@ -133,4 +139,5 @@ struct TimePageView: View {
             TimePageView(selectedMood: "Switch My Vibe")
         }
     }
+
 
