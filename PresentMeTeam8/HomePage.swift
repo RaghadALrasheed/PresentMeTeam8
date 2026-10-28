@@ -113,12 +113,29 @@ struct HomePage: View {
                 TarfahGardenView(gardenManager: gardenManager)
             }
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(isPresented: $showMood) {
-                MoodPage()
+            // MARK: - Workout Navigation
+            // Present all workout screens in one dismissible flow.
+            .fullScreenCover(isPresented: $showMood) {
+                NavigationStack {
+                    MoodPage()
+                        .environment(\.popToRoot) {
+                            showMood = false
+                        }
+                }
+            }
+
+            // Listen for requests to return Home from any workout screen.
+            // Dismiss the entire workout flow, not just the current page.
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: Notification.Name("BloomoveReturnHome")
+                )
+            ) { _ in
+                showMood = false
+            }
             }
         }
     }
-}
 
 #Preview {
     HomePage()
