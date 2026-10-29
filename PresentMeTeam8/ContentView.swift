@@ -1,98 +1,123 @@
 
 import SwiftUI
 
-// MARK: - App Entry Flow
-// Controls the Splash, Onboarding, and Home screens.
+// MARK: - Bloomove Colors
+// Use one consistent background throughout the onboarding flow.
+private enum OnboardingColors {
+    static let background = Color(
+        red: 254/255,
+        green: 249/255,
+        blue: 243/255
+    )
+}
 
+// MARK: - App Entry Flow
+// Always show Splash and Onboarding on a fresh app launch.
 struct ContentView: View {
 
-    // Remember whether the user has completed onboarding.
-    // This value stays saved after closing the app.
-    @AppStorage("hasCompletedOnboarding")
-    private var hasCompletedOnboarding = false
-
-    // Track whether the splash animation has finished.
+    // Track when the splash animation finishes.
     @State private var splashFinished = false
+
+    // Track when the user finishes onboarding.
+    // Using State means onboarding will appear on a fresh app launch.
+    @State private var onboardingFinished = false
 
     var body: some View {
 
-        Group {
+        ZStack {
 
-            if !splashFinished {
+            // Keep the background consistent during screen transitions.
+            OnboardingColors.background
+                .ignoresSafeArea()
 
-                // Always show the Splash screen when launching.
-                SplashScreen {
-                    splashFinished = true
+            Group {
+
+                if !splashFinished {
+
+                    // Show Splash when the app launches.
+                    SplashScreen {
+                        splashFinished = true
+                    }
+
+                } else if !onboardingFinished {
+
+                    // Show the two original onboarding pages.
+                    BloomoveOnboardingFlow {
+
+                        // Skip or Get Started opens HomePage.
+                        onboardingFinished = true
+                    }
+
+                } else {
+
+                    // Keep the existing Home screen and garden progress.
+                    HomePage()
                 }
-
-            } else if !hasCompletedOnboarding {
-
-                // Show onboarding only for first-time users.
-                BloomoveOnboardingFlow {
-
-                    // Save onboarding completion permanently.
-                    hasCompletedOnboarding = true
-                }
-
-            } else {
-
-                // Open the real Home screen.
-                // The existing garden manager remains shared.
-                HomePage()
             }
         }
     }
 }
 
-
 // MARK: - Onboarding Navigation
-// Connect the two original onboarding pages.
-// Keep their existing designs, images, and colors.
-
+// Connect both onboarding pages in one full-screen swipeable flow.
 struct BloomoveOnboardingFlow: View {
 
     let onFinished: () -> Void
 
-    // Track the currently displayed onboarding page.
+    // Track the current onboarding page.
     @State private var selectedPage = 0
 
     var body: some View {
 
-        TabView(selection: $selectedPage) {
+        ZStack {
 
-            // MARK: - First Onboarding Page
+            // Extend Bloomove's cream background behind all safe areas.
+            OnboardingColors.background
+                .ignoresSafeArea()
 
-            OnboardingPage1(
+            TabView(selection: $selectedPage) {
 
-                // Skip onboarding and go directly Home.
-                onSkip: {
-                    onFinished()
-                }
+                // MARK: - Onboarding Page 1
+
+                OnboardingPage1(
+                    onSkip: {
+                        onFinished()
+                    }
+                )
+                .tag(0)
+
+                // MARK: - Onboarding Page 2
+
+                OnboardingPage2(
+                    onGetStarted: {
+                        onFinished()
+                    }
+                )
+                .tag(1)
+            }
+
+            // Enable horizontal swiping between the two pages.
+            .tabViewStyle(
+                .page(indexDisplayMode: .never)
             )
-            .tag(0)
 
-            // MARK: - Second Onboarding Page
-
-            OnboardingPage2(
-
-                // Complete onboarding and open Home.
-                onGetStarted: {
-                    onFinished()
-                }
+            // Make onboarding content fill the screen.
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
             )
-            .tag(1)
         }
 
-        // Enable horizontal swiping between the two pages.
-        .tabViewStyle(
-            .page(indexDisplayMode: .never)
-        )
-
-        // Hide default navigation controls.
+        // Hide navigation controls but keep the system status bar.
         .toolbar(.hidden, for: .navigationBar)
+
+        // Apply the same cream background to the complete flow.
+        .background {
+            OnboardingColors.background
+                .ignoresSafeArea()
+        }
     }
 }
-
 
 // MARK: - Preview
 

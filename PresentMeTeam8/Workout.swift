@@ -699,6 +699,148 @@ struct workoutView: View {
     }
 }
 
+// MARK: - Switch My Vibe Preparation Screen
+// Shows the selected workout duration before starting.
+// The countdown begins only after the user taps Start Now.
+
+struct SwitchMyVibeReadyView: View {
+
+    let minutes: Int
+
+    @Environment(\.dismiss) private var dismiss
+
+    // Controls navigation to the active workout.
+    @State private var showWorkout = false
+
+    // MARK: - Bloomove Colors
+
+    private let background = Color(
+        red: 254/255,
+        green: 249/255,
+        blue: 243/255
+    )
+
+    private let accent = Color(
+        red: 184/255,
+        green: 76/255,
+        blue: 112/255
+    )
+
+    private let titleColor = Color(
+        red: 32/255,
+        green: 61/255,
+        blue: 46/255
+    )
+
+    private let subtitleColor = Color(
+        red: 89/255,
+        green: 102/255,
+        blue: 94/255
+    )
+
+    private let ringFill = Color(
+        red: 234/255,
+        green: 239/255,
+        blue: 225/255
+    )
+
+    var body: some View {
+
+        ZStack {
+
+            background
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+
+                // MARK: - Workout Title
+
+                Text("Switch My Vibe")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundColor(titleColor)
+                    .padding(.top, 55)
+
+                Text("Focus on yourself")
+                    .font(.system(size: 16))
+                    .foregroundColor(subtitleColor)
+                    .padding(.top, 12)
+
+                Spacer()
+
+                // MARK: - Selected Duration
+
+                // This is a static preview of the selected time.
+                // The workout timer starts on the next screen.
+
+                ZStack {
+
+                    Circle()
+                        .fill(ringFill)
+
+                    Circle()
+                        .stroke(
+                            subtitleColor,
+                            lineWidth: 3
+                        )
+
+                    Text(
+                        String(
+                            format: "%02d:00",
+                            minutes
+                        )
+                    )
+                    .font(.system(size: 46, weight: .medium))
+                    .monospacedDigit()
+                    .foregroundColor(titleColor)
+                }
+                .frame(width: 230, height: 230)
+
+                Spacer()
+
+                // MARK: - Start Workout Button
+
+                Button {
+
+                    // Open the selected workout.
+                    showWorkout = true
+
+                } label: {
+
+                    Text("Start Now")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 65)
+                        .background(
+                            accent,
+                            in: RoundedRectangle(cornerRadius: 18)
+                        )
+                }
+                .padding(.bottom, 24)
+            }
+            .padding(.horizontal, 24)
+        }
+
+        // MARK: - Native Apple Back Button
+
+        // Keep the default system back button available.
+        .navigationBarBackButtonHidden(false)
+        .toolbar(.visible, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
+
+        // MARK: - Workout Navigation
+
+        // Pass the selected duration to the existing workout system.
+        .navigationDestination(isPresented: $showWorkout) {
+
+            workoutView(
+                selectedMood: "Switch My Vibe",
+                durationMinutes: minutes
+            )
+        }
+    }
+}
+
 // MARK: - Preview
 // Preview the 5-minute Switch My Vibe workout.
 

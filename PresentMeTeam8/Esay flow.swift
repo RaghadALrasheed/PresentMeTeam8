@@ -3,14 +3,48 @@ import SwiftUI
 import Combine
 import AudioToolbox
 
-// MARK: - Easy Flow Colors
-// Keep the original visual identity of the team's Easy Flow screen.
+
+// MARK: - Bloomove Design Colors
+// Use the official Bloomove color palette across Easy Flow screens.
+
 private enum EasyFlowColors {
-    static let background = Color(red: 0.96, green: 0.95, blue: 0.91)
-    static let circleFill = Color(red: 0.85, green: 0.92, blue: 0.84)
-    static let darkGreen = Color(red: 0.29, green: 0.42, blue: 0.40)
-    static let pink = Color(red: 184/255, green: 76/255, blue: 112/255)
+
+    // Official Bloomove cream background.
+    static let background = Color(
+        red: 254/255,
+        green: 249/255,
+        blue: 243/255
+    )
+
+    // Light sage green used inside timer circles and controls.
+    static let circleFill = Color(
+        red: 234/255,
+        green: 239/255,
+        blue: 225/255
+    )
+
+    // Official dark green used for titles and primary text.
+    static let darkGreen = Color(
+        red: 32/255,
+        green: 61/255,
+        blue: 46/255
+    )
+
+    // Official Bloomove pink used for primary buttons.
+    static let pink = Color(
+        red: 184/255,
+        green: 76/255,
+        blue: 112/255
+    )
+
+    // Muted sage green for secondary text and timer outlines.
+    static let sageGreen = Color(
+        red: 89/255,
+        green: 102/255,
+        blue: 94/255
+    )
 }
+
 
 // MARK: - Original Exercise Model
 // Preserve the exercise information created by the team.
@@ -30,63 +64,63 @@ extension Exercise {
     static let all: [Exercise] = [
 
         Exercise(
-            subtitle: "1 min slow walking",
+            subtitle: " Slow Walking",
             minutes: 1,
             image: "Esay flow1",
             description: "Walk slowly in place or around the room. Keep your shoulders relaxed and breathe naturally."
         ),
 
         Exercise(
-            subtitle: "1 min Standing Pelvic",
+            subtitle: "Standing Pelvic",
             minutes: 1,
             image: "Esay flow 2",
             description: "Stand tall with hands on your hips. Gently tilt your pelvis forward and back."
         ),
 
         Exercise(
-            subtitle: "2 min slow walking",
+            subtitle: "Slow Walking",
             minutes: 2,
             image: "Esay flow 3",
             description: "Keep a calm, steady pace. Lift your knees a little and swing your arms softly."
         ),
 
         Exercise(
-            subtitle: "1 min Pelvic Tilt",
+            subtitle: " Pelvic Tilt",
             minutes: 1,
             image: "Esay flow 4",
             description: "Lie on your back with knees bent. Press your lower back down, then release slowly."
         ),
 
         Exercise(
-            subtitle: "1 min Cat-Cow",
+            subtitle: " Cat-Cow",
             minutes: 1,
             image: "Esay flow 5",
             description: "On hands and knees, arch your back up, then dip it down. Move with your breath."
         ),
 
         Exercise(
-            subtitle: "1 min Gentle Standing",
+            subtitle: "Gentle Standing",
             minutes: 1,
             image: "Esay flow 6",
             description: "Stand comfortably and lift one knee at a time. Go gently and keep your balance."
         ),
 
         Exercise(
-            subtitle: "4 min comfortable",
+            subtitle: "Comfortable Walking",
             minutes: 4,
             image: "Esay flow 7",
             description: "Walk at a comfortable pace with relaxed arm swings. Stop if you feel any pain."
         ),
 
         Exercise(
-            subtitle: "3 min Standing Hip",
+            subtitle: " Standing Hip",
             minutes: 3,
             image: "Esay flow 8",
             description: "Hands on hips, draw slow circles with your hips. Switch direction halfway."
         ),
 
         Exercise(
-            subtitle: "3 min Standing Side",
+            subtitle: " Standing Side",
             minutes: 3,
             image: "Esay flow 9",
             description: "Reach one arm overhead and lean to the side. Hold a moment, then switch sides."
@@ -724,7 +758,8 @@ struct WorkoutPageView: View {
                 Text(step.exercise.description)
                     .font(.system(size: 14))
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(.black.opacity(0.7))
+                // Use the official Bloomove secondary text color.
+                .foregroundStyle(EasyFlowColors.sageGreen)
                     .padding(.horizontal, 22)
                     .padding(.top, 8)
 
@@ -757,13 +792,14 @@ struct WorkoutPageView: View {
                                 ? Double(20 - breakRemaining) / 20.0
                                 : progress
                         )
-                        .stroke(
-                            EasyFlowColors.darkGreen,
-                            style: StrokeStyle(
-                                lineWidth: 4,
-                                lineCap: .round
-                            )
+                    // Use Bloomove sage green for the timer progress ring.
+                    .stroke(
+                        EasyFlowColors.sageGreen,
+                        style: StrokeStyle(
+                            lineWidth: 4,
+                            lineCap: .round
                         )
+                    )
                         .rotationEffect(.degrees(-90))
 
                     Text(isOnBreak ? breakTimeText : timeText)
