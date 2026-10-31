@@ -1,17 +1,16 @@
-//
-//  PresentMeTeam8App.swift
-//  PresentMeTeam8
-//
-//  Created by Raghad Alrasheed on 10/05/1448 AH.
-//
 
 import SwiftUI
 
 @main
 struct PresentMeTeam8App: App {
+
+    // Share the same garden progress across all app screens.
+    @StateObject private var gardenManager = GardenProgressManager()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(gardenManager)
         }
     }
 }
