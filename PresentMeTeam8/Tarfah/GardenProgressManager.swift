@@ -140,6 +140,9 @@ final class GardenProgressManager: ObservableObject {
         
         // Add completed minutes to lifetime activity total
         totalActivityMinutes += completedMinutes
+        
+        print("Workout earned: \(completedMinutes) min")
+        print("Total activity: \(totalActivityMinutes) min")
 
         // Find a flower that is still growing
         if let activeSpot = plantedFlowers.keys.first(where: {

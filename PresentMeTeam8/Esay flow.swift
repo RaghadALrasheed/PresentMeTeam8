@@ -3,41 +3,35 @@ import SwiftUI
 import Combine
 import AudioToolbox
 
-
 // MARK: - Bloomove Design Colors
-// Use the official Bloomove color palette across Easy Flow screens.
+// Shared colors for all Easy Flow workout screens.
 
 private enum EasyFlowColors {
 
-    // Official Bloomove cream background.
     static let background = Color(
         red: 254/255,
         green: 249/255,
         blue: 243/255
     )
 
-    // Light sage green used inside timer circles and controls.
     static let circleFill = Color(
         red: 234/255,
         green: 239/255,
         blue: 225/255
     )
 
-    // Official dark green used for titles and primary text.
     static let darkGreen = Color(
         red: 32/255,
         green: 61/255,
         blue: 46/255
     )
 
-    // Official Bloomove pink used for primary buttons.
     static let pink = Color(
         red: 184/255,
         green: 76/255,
         blue: 112/255
     )
 
-    // Muted sage green for secondary text and timer outlines.
     static let sageGreen = Color(
         red: 89/255,
         green: 102/255,
@@ -45,9 +39,9 @@ private enum EasyFlowColors {
     )
 }
 
+// MARK: - Exercise Model
+// Keep the original exercise information and asset names.
 
-// MARK: - Original Exercise Model
-// Preserve the exercise information created by the team.
 struct Exercise: Identifiable {
 
     let id = UUID()
@@ -57,21 +51,22 @@ struct Exercise: Identifiable {
     let description: String
 }
 
-// MARK: - Original Exercise Library
-// All nine exercises remain available for future workout plans.
+// MARK: - Easy Flow Exercise Library
+// All nine original exercise assets are preserved.
+
 extension Exercise {
 
     static let all: [Exercise] = [
 
         Exercise(
-            subtitle: " Slow Walking",
+            subtitle: "Slow Walking",
             minutes: 1,
             image: "Esay flow1",
             description: "Walk slowly in place or around the room. Keep your shoulders relaxed and breathe naturally."
         ),
 
         Exercise(
-            subtitle: "Standing Pelvic",
+            subtitle: "Standing Pelvic Tilts",
             minutes: 1,
             image: "Esay flow 2",
             description: "Stand tall with hands on your hips. Gently tilt your pelvis forward and back."
@@ -81,25 +76,25 @@ extension Exercise {
             subtitle: "Slow Walking",
             minutes: 2,
             image: "Esay flow 3",
-            description: "Keep a calm, steady pace. Lift your knees a little and swing your arms softly."
+            description: "Walk slowly in place or around the room. Keep your shoulders relaxed and breathe naturally."
         ),
 
         Exercise(
-            subtitle: " Pelvic Tilt",
+            subtitle: "Pelvic Tilt",
             minutes: 1,
             image: "Esay flow 4",
             description: "Lie on your back with knees bent. Press your lower back down, then release slowly."
         ),
 
         Exercise(
-            subtitle: " Cat-Cow",
+            subtitle: "Cat-Cow",
             minutes: 1,
             image: "Esay flow 5",
             description: "On hands and knees, arch your back up, then dip it down. Move with your breath."
         ),
 
         Exercise(
-            subtitle: "Gentle Standing",
+            subtitle: "Gentle Standing March",
             minutes: 1,
             image: "Esay flow 6",
             description: "Stand comfortably and lift one knee at a time. Go gently and keep your balance."
@@ -113,14 +108,14 @@ extension Exercise {
         ),
 
         Exercise(
-            subtitle: " Standing Hip",
+            subtitle: "Standing Hip Circles",
             minutes: 3,
             image: "Esay flow 8",
             description: "Hands on hips, draw slow circles with your hips. Switch direction halfway."
         ),
 
         Exercise(
-            subtitle: " Standing Side",
+            subtitle: "Standing Side Stretches",
             minutes: 3,
             image: "Esay flow 9",
             description: "Reach one arm overhead and lean to the side. Hold a moment, then switch sides."
@@ -129,27 +124,32 @@ extension Exercise {
 }
 
 // MARK: - Session Step
-// Allow a workout to use an exercise for a selected duration
-// without changing its original information in Exercise.all.
-private struct EasyFlowStep {
+// Store the exercise and its active duration separately.
+
+fileprivate struct EasyFlowStep {
 
     let exercise: Exercise
     let seconds: Int
-    let subtitle: String
 
-    init(
-        exercise: Exercise,
-        seconds: Int? = nil,
-        subtitle: String? = nil
-    ) {
+    init(exercise: Exercise, seconds: Int? = nil) {
         self.exercise = exercise
         self.seconds = seconds ?? exercise.minutes * 60
-        self.subtitle = subtitle ?? exercise.subtitle
+    }
+
+    // Display only the exercise name above the image.
+    var name: String {
+        exercise.subtitle
+    }
+
+    // Display the current exercise duration below instructions.
+    var durationLabel: String {
+        "\(seconds / 60) Min"
     }
 }
 
 // MARK: - Easy Flow Workout Plans
-// Build sessions of exactly 2, 5, or 10 ACTIVE minutes.
+// Each plan matches the exact exercise distribution requested.
+
 private enum EasyFlowPlan {
 
     static func steps(for minutes: Int) -> [EasyFlowStep] {
@@ -159,43 +159,50 @@ private enum EasyFlowPlan {
         switch minutes {
 
         case 2:
-            // 1 + 1 = 2 active minutes.
+
+            // 2-minute session:
+            // 1 min Slow Walking
+            // 1 min Standing Pelvic Tilts
+
             return [
                 EasyFlowStep(exercise: all[0]),
                 EasyFlowStep(exercise: all[1])
             ]
 
         case 5:
-            // 1 + 1 + 2 + 1 = 5 active minutes.
-            return [
-                EasyFlowStep(exercise: all[0]),
-                EasyFlowStep(exercise: all[1]),
-                EasyFlowStep(exercise: all[2]),
-                EasyFlowStep(exercise: all[3])
-            ]
 
-        default:
-            // 1 + 1 + 2 + 1 + 1 + 1 + 3 = 10 active minutes.
-            // The final walking exercise is shortened to 3 minutes.
+            // 5-minute session:
+            // 2 min Slow Walking
+            // 1 min Pelvic Tilt
+            // 1 min Cat-Cow
+            // 1 min Gentle Standing March
+
             return [
-                EasyFlowStep(exercise: all[0]),
-                EasyFlowStep(exercise: all[1]),
                 EasyFlowStep(exercise: all[2]),
                 EasyFlowStep(exercise: all[3]),
                 EasyFlowStep(exercise: all[4]),
-                EasyFlowStep(exercise: all[5]),
-                EasyFlowStep(
-                    exercise: all[6],
-                    seconds: 180,
-                    subtitle: "3 min comfortable walking"
-                )
+                EasyFlowStep(exercise: all[5])
+            ]
+
+        default:
+
+            // 10-minute session:
+            // 4 min Comfortable Walking
+            // 3 min Standing Hip Circles
+            // 3 min Standing Side Stretches
+
+            return [
+                EasyFlowStep(exercise: all[6]),
+                EasyFlowStep(exercise: all[7]),
+                EasyFlowStep(exercise: all[8])
             ]
         }
     }
 }
 
 // MARK: - Easy Flow Preparation Screen
-// Show the session duration before the user starts exercising.
+// Show the selected session time before the workout starts.
+
 struct EasyFlowReady: View {
 
     let minutes: Int
@@ -207,23 +214,31 @@ struct EasyFlowReady: View {
 
         ZStack {
 
-            EasyFlowColors.background.ignoresSafeArea()
+            EasyFlowColors.background
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
+
+                // MARK: - Back Button
 
                 HStack {
 
                     Button {
                         dismiss()
                     } label: {
-                        Label("Back", systemImage: "chevron.left")
-                            .font(.system(size: 16))
-                            .foregroundColor(EasyFlowColors.darkGreen)
+                        Label(
+                            "Back",
+                            systemImage: "chevron.left"
+                        )
+                        .font(.system(size: 16))
+                        .foregroundColor(EasyFlowColors.darkGreen)
                     }
 
                     Spacer()
                 }
                 .padding(.top, 12)
+
+                // MARK: - Workout Title
 
                 Text("Easy Flow")
                     .font(.system(size: 30, weight: .semibold))
@@ -232,12 +247,14 @@ struct EasyFlowReady: View {
 
                 Text("Move gently, at your own pace")
                     .font(.system(size: 15))
-                    .foregroundColor(EasyFlowColors.darkGreen.opacity(0.8))
+                    .foregroundColor(EasyFlowColors.sageGreen)
                     .padding(.top, 10)
 
                 Spacer()
 
-                // Show the selected duration before starting.
+                // MARK: - Selected Workout Duration
+                // This is a preview; the timer starts on the next screen.
+
                 ZStack {
 
                     Circle()
@@ -245,18 +262,22 @@ struct EasyFlowReady: View {
 
                     Circle()
                         .stroke(
-                            EasyFlowColors.darkGreen,
+                            EasyFlowColors.sageGreen,
                             lineWidth: 3
                         )
 
-                    Text(String(format: "%02d:00", minutes))
-                        .font(.system(size: 45))
-                        .monospacedDigit()
-                        .foregroundColor(EasyFlowColors.darkGreen)
+                    Text(
+                        String(format: "%02d:00", minutes)
+                    )
+                    .font(.system(size: 45))
+                    .monospacedDigit()
+                    .foregroundColor(EasyFlowColors.darkGreen)
                 }
                 .frame(width: 225, height: 225)
 
                 Spacer()
+
+                // MARK: - Start Workout
 
                 Button {
                     showWorkout = true
@@ -278,6 +299,7 @@ struct EasyFlowReady: View {
         }
         .navigationBarBackButtonHidden(true)
 
+        // Start the exact workout plan selected by the user.
         .navigationDestination(isPresented: $showWorkout) {
             ExerciseFlowView(minutes: minutes)
         }
@@ -285,37 +307,39 @@ struct EasyFlowReady: View {
 }
 
 // MARK: - Easy Flow Session Controller
-// Manage active exercise seconds, 20-second breaks, and rewards.
+// Manage active time, 20-second breaks, results, and garden rewards.
+
 struct ExerciseFlowView: View {
 
     @EnvironmentObject var gardenManager: GardenProgressManager
 
     let minutes: Int
 
-    // Store the exercise plan for this specific session.
     private let steps: [EasyFlowStep]
 
-    // Count only ACTIVE workout time.
+    // Active movement seconds only.
     @State private var remaining: Int
+
+    // MARK: - Pause State
 
     @State private var isPaused = false
 
-    // MARK: - Break State
+    // MARK: - Exercise Break
 
-    // Give the user 20 seconds before each next exercise.
     private let breakDuration = 20
 
     @State private var isOnBreak = false
     @State private var breakRemaining = 0
 
-    // MARK: - Confirmation State
+    // MARK: - End Confirmation
 
     @State private var showEndConfirmation = false
     @State private var wasPausedBeforeConfirmation = false
+
     @State private var finishEarlyAfterDismiss = false
     @State private var resumeAfterDismiss = false
 
-    // MARK: - Result State
+    // MARK: - Result Screens
 
     @State private var showCompletion = false
     @State private var showEarlyCompletion = false
@@ -323,10 +347,11 @@ struct ExerciseFlowView: View {
 
     @State private var earnedMinutes = 0
 
-    // A unique ID prevents duplicate rewards for the same session.
+    // A unique session ID prevents duplicate rewards.
     @State private var workoutSessionID = UUID().uuidString
 
-    // Update the countdown every second.
+    // MARK: - Timer
+
     private let timer = Timer.publish(
         every: 1,
         on: .main,
@@ -340,7 +365,6 @@ struct ExerciseFlowView: View {
         self.minutes = minutes
 
         let selectedSteps = EasyFlowPlan.steps(for: minutes)
-
         self.steps = selectedSteps
 
         let totalSeconds = selectedSteps.reduce(0) {
@@ -362,8 +386,8 @@ struct ExerciseFlowView: View {
         total - remaining
     }
 
-    // Find the current exercise using its actual duration.
-    // At the start of a break, this points to the NEXT exercise.
+    // Find the exercise according to cumulative active seconds.
+    // At a break boundary, this selects the next exercise.
     private var currentIndex: Int {
 
         guard !steps.isEmpty else {
@@ -388,7 +412,9 @@ struct ExerciseFlowView: View {
         steps[currentIndex]
     }
 
+    // Overall session progress.
     private var progress: Double {
+
         guard total > 0 else {
             return 0
         }
@@ -400,7 +426,7 @@ struct ExerciseFlowView: View {
         showCompletion || showEarlyCompletion
     }
 
-    // MARK: - Main Screen
+    // MARK: - Main Workout Screen
 
     var body: some View {
 
@@ -420,15 +446,15 @@ struct ExerciseFlowView: View {
                 openEndConfirmation()
             }
         )
-
         .navigationBarBackButtonHidden(true)
 
-        // Update workout time or break time.
+        // MARK: - Timer Updates
+
         .onReceive(timer) { _ in
             tick()
         }
 
-        // Keep the device awake during the session.
+        // Keep the phone awake during the workout.
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
         }
@@ -443,7 +469,7 @@ struct ExerciseFlowView: View {
             isPresented: $showEndConfirmation,
             onDismiss: {
 
-                // Wait until the confirmation closes before navigating.
+                // Wait for confirmation to close before navigating.
                 if finishEarlyAfterDismiss {
 
                     finishEarlyAfterDismiss = false
@@ -451,7 +477,6 @@ struct ExerciseFlowView: View {
 
                 } else if resumeAfterDismiss {
 
-                    // Return to the same time and exercise.
                     resumeAfterDismiss = false
                     isPaused = wasPausedBeforeConfirmation
                 }
@@ -519,22 +544,26 @@ struct ExerciseFlowView: View {
 
         // MARK: - Interactive Garden
 
-        // Open the same garden used by HomePage.
         .sheet(isPresented: $showGarden) {
+
             NavigationStack {
-                TarfahGardenView(gardenManager: gardenManager)
+                TarfahGardenView(
+                    gardenManager: gardenManager
+                )
             }
         }
     }
 
-    // MARK: - End Confirmation
+    // MARK: - End Confirmation Logic
 
     private func openEndConfirmation() {
 
-        // Remember whether the user had already paused.
+        // Remember the state before confirmation.
         wasPausedBeforeConfirmation = isPaused
 
+        // Freeze exercise or break countdowns.
         isPaused = true
+
         showEndConfirmation = true
     }
 
@@ -542,14 +571,14 @@ struct ExerciseFlowView: View {
 
     private func tick() {
 
-        // Never count while paused, confirming, or finished.
+        // Never count during pause, confirmation, or completion.
         guard !isPaused,
               !showEndConfirmation,
               !hasEnded else {
             return
         }
 
-        // MARK: Break Countdown
+        // MARK: - Break Countdown
 
         if isOnBreak {
 
@@ -564,11 +593,11 @@ struct ExerciseFlowView: View {
                 isOnBreak = false
             }
 
-            // Break time does not count as active movement.
+            // Break seconds do not count as activity.
             return
         }
 
-        // MARK: Active Workout Countdown
+        // MARK: - Active Exercise Countdown
 
         guard remaining > 0 else {
             return
@@ -576,13 +605,13 @@ struct ExerciseFlowView: View {
 
         remaining -= 1
 
-        // Do not show a break after the final exercise.
+        // Finish immediately after the final active second.
         if remaining == 0 {
             finishWorkout()
             return
         }
 
-        // Show a break whenever an exercise is completed.
+        // Show a 20-second break between exercises.
         if isExerciseBoundary {
             startBreak()
         }
@@ -590,12 +619,11 @@ struct ExerciseFlowView: View {
 
     // MARK: - Exercise Boundary Detection
 
-    // Detect the end of each exercise using cumulative seconds.
-    // Exclude the final exercise so the workout completes directly.
     private var isExerciseBoundary: Bool {
 
         var accumulated = 0
 
+        // Never show a break after the final exercise.
         for step in steps.dropLast() {
 
             accumulated += step.seconds
@@ -608,14 +636,14 @@ struct ExerciseFlowView: View {
         return false
     }
 
-    // MARK: - Start Break
+    // MARK: - Start Exercise Break
 
     private func startBreak() {
 
         isOnBreak = true
         breakRemaining = breakDuration
 
-        // Play the same alert used in the other Bloomove categories.
+        // Play the same transition alert as the other categories.
         AudioServicesPlaySystemSound(1005)
     }
 
@@ -625,7 +653,7 @@ struct ExerciseFlowView: View {
 
         earnedMinutes = total / 60
 
-        // Save the completed active minutes exactly once.
+        // Record completed active minutes in the garden.
         gardenManager.recordWorkout(
             id: workoutSessionID,
             completedMinutes: earnedMinutes
@@ -638,8 +666,8 @@ struct ExerciseFlowView: View {
 
     private func finishEarly() {
 
-        // Reward only full minutes of actual movement.
-        // Seconds spent on preparation breaks are excluded.
+        // Reward only completed full minutes of active exercise.
+        // Break time is excluded.
         earnedMinutes = elapsed / 60
 
         if earnedMinutes > 0 {
@@ -657,7 +685,7 @@ struct ExerciseFlowView: View {
 
     private func returnHome() {
 
-        // HomePage listens for this notification and closes the flow.
+        // HomePage closes the workout flow after this notification.
         NotificationCenter.default.post(
             name: Notification.Name("BloomoveReturnHome"),
             object: nil
@@ -665,9 +693,9 @@ struct ExerciseFlowView: View {
     }
 }
 
-// MARK: - Workout Page
-// Preserve the original Easy Flow exercise design.
-// Switch between the current exercise and the next-exercise preview.
+// MARK: - Easy Flow Workout Page
+// Match the layout and control dimensions of Switch My Vibe.
+
 struct WorkoutPageView: View {
 
     fileprivate let step: EasyFlowStep
@@ -682,7 +710,7 @@ struct WorkoutPageView: View {
     let onPause: () -> Void
     let onEnd: () -> Void
 
-    // MARK: - Timer Text
+    // MARK: - Timer Formatting
 
     private var timeText: String {
         String(
@@ -700,90 +728,109 @@ struct WorkoutPageView: View {
         )
     }
 
+    // MARK: - Main Screen
+
     var body: some View {
 
         ZStack {
 
-            EasyFlowColors.background.ignoresSafeArea()
+            EasyFlowColors.background
+                .ignoresSafeArea()
 
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
 
-                // MARK: - Workout Title
+                // MARK: - Workout Category
 
                 Text("Easy Flow")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 30))
                     .foregroundColor(EasyFlowColors.darkGreen)
-                    .padding(.top, 16)
+                    .padding(.top, 18)
 
                 if isOnBreak {
 
-                    // MARK: - Break Header
+                    // MARK: - Next Exercise Announcement
 
                     Text("Up Next")
                         .font(.system(size: 23, weight: .bold))
                         .foregroundColor(EasyFlowColors.pink)
 
-                    Text(step.subtitle)
-                        .font(.system(size: 17, weight: .semibold))
+                    Text(step.name)
+                        .font(.system(size: 17, weight: .medium))
                         .foregroundColor(EasyFlowColors.darkGreen)
                         .multilineTextAlignment(.center)
 
                     Text("Get ready for your next move!")
                         .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(EasyFlowColors.sageGreen)
 
                 } else {
 
-                    // MARK: - Active Exercise Header
+                    // MARK: - Current Exercise Name
+                    // Show only the name, without "1 min" or "2 min".
 
-                    Text(step.subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    Text(step.name)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundColor(EasyFlowColors.darkGreen)
+                        .multilineTextAlignment(.center)
                 }
 
                 Spacer(minLength: 8)
 
                 // MARK: - Exercise Image
+                // Keep the team's original exercise illustration.
+                // During breaks, show the upcoming exercise.
 
-                // Display the next exercise image during a break.
                 Image(step.exercise.image)
                     .resizable()
                     .scaledToFit()
+                    .frame(maxWidth: .infinity)
                     .frame(maxHeight: isOnBreak ? 230 : 280)
+                    .clipShape(
+                        RoundedRectangle(cornerRadius: 20)
+                    )
                     .id(step.exercise.id)
 
                 // MARK: - Exercise Instructions
 
                 Text(step.exercise.description)
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
+                    .foregroundColor(EasyFlowColors.sageGreen)
                     .multilineTextAlignment(.center)
-                // Use the official Bloomove secondary text color.
-                .foregroundStyle(EasyFlowColors.sageGreen)
-                    .padding(.horizontal, 22)
+                    .padding(.horizontal, 12)
                     .padding(.top, 8)
 
                 Spacer(minLength: 8)
 
+                // MARK: - Exercise Duration
+                // Display the CURRENT exercise duration above the timer.
+                // Never display the total session duration here.
+
                 if isOnBreak {
 
                     Text("Starting in")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(EasyFlowColors.darkGreen)
 
                 } else {
 
-                    Text("\(step.seconds / 60) Min")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Text(step.durationLabel)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(EasyFlowColors.sageGreen)
                 }
 
-                // MARK: - Circular Countdown
+                // MARK: - Circular Timer
+                // Show overall active workout time or the 20-second break.
 
                 ZStack {
 
                     Circle()
                         .fill(EasyFlowColors.circleFill)
+
+                    Circle()
+                        .stroke(
+                            EasyFlowColors.sageGreen.opacity(0.25),
+                            lineWidth: 4
+                        )
 
                     Circle()
                         .trim(
@@ -792,24 +839,27 @@ struct WorkoutPageView: View {
                                 ? Double(20 - breakRemaining) / 20.0
                                 : progress
                         )
-                    // Use Bloomove sage green for the timer progress ring.
-                    .stroke(
-                        EasyFlowColors.sageGreen,
-                        style: StrokeStyle(
-                            lineWidth: 4,
-                            lineCap: .round
+                        .stroke(
+                            EasyFlowColors.sageGreen,
+                            style: StrokeStyle(
+                                lineWidth: 4,
+                                lineCap: .round
+                            )
                         )
-                    )
                         .rotationEffect(.degrees(-90))
 
-                    Text(isOnBreak ? breakTimeText : timeText)
-                        .font(.system(size: 30, weight: .medium))
-                        .monospacedDigit()
-                        .foregroundColor(EasyFlowColors.darkGreen)
+                    Text(
+                        isOnBreak ? breakTimeText : timeText
+                    )
+                    .font(.system(size: 32, weight: .medium))
+                    .monospacedDigit()
+                    .foregroundColor(EasyFlowColors.darkGreen)
                 }
-                .frame(width: 130, height: 130)
+                .frame(width: 145, height: 145)
+                .padding(.top, 10)
 
-                // MARK: - Pause / Resume / End
+                // MARK: - Pause and End Controls
+                // Match Switch My Vibe's 72x72 button dimensions.
 
                 HStack {
 
@@ -829,15 +879,17 @@ struct WorkoutPageView: View {
                         onEnd()
                     }
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 24)
+                .padding(.top, 10)
                 .padding(.bottom, 8)
             }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 24)
         }
     }
 
-    // MARK: - Reusable Control Button
+    // MARK: - Unified Workout Control
+    // Both Pause and End use the same 72x72 circle.
+    // The same size is used by Switch My Vibe.
 
     private func controlButton(
         icon: String,
@@ -845,25 +897,27 @@ struct WorkoutPageView: View {
         action: @escaping () -> Void
     ) -> some View {
 
-        Button(action: action) {
+        VStack(spacing: 8) {
 
-            VStack(spacing: 6) {
+            Button(action: action) {
 
                 Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundStyle(EasyFlowColors.darkGreen)
-                    .frame(width: 52, height: 52)
+                    .font(.system(size: 25, weight: .semibold))
+                    .foregroundColor(EasyFlowColors.darkGreen)
+                    .frame(width: 72, height: 72)
                     .background(
                         EasyFlowColors.circleFill,
                         in: Circle()
                     )
-
-                Text(label)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .contentShape(Circle())
             }
+            .buttonStyle(.plain)
+
+            Text(label)
+                .font(.system(size: 14))
+                .foregroundColor(EasyFlowColors.darkGreen)
         }
-        .buttonStyle(.plain)
+        .frame(width: 100)
     }
 }
 

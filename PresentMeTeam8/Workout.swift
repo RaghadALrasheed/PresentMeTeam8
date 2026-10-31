@@ -1,26 +1,29 @@
-import Foundation
 
+import Foundation
 import SwiftUI
 import Combine
 import AudioToolbox
 
 // MARK: - Switch My Vibe Exercise Model
-// Each exercise has its own duration, image, and instructions.
-private struct SwitchVibeExercise {
+// Each exercise keeps its original duration, image, and instructions.
 
+private struct SwitchVibeExercise {
     let name: String
     let imageName: String
     let description: String
     let seconds: Int
 
+    // Display only the current exercise duration.
+    // The exercise name is displayed separately above the image.
     var durationLabel: String {
         let minutes = seconds / 60
-        return "\(minutes) min \(name)"
+        return "\(minutes) Min"
     }
 }
 
 // MARK: - Switch My Vibe Workout Plans
-// Preserve the original exercises for 2, 5, and 10 minutes.
+// Preserve the original 2, 5, and 10-minute exercise plans.
+
 private enum SwitchVibePlan {
 
     static func exercises(for minutes: Int) -> [SwitchVibeExercise] {
@@ -28,7 +31,7 @@ private enum SwitchVibePlan {
         switch minutes {
 
         case 2:
-            // Original 2-minute plan: 1 + 1 minutes.
+            // 2-minute plan: 1 + 1 minutes.
             return [
                 SwitchVibeExercise(
                     name: "Marching",
@@ -36,7 +39,6 @@ private enum SwitchVibePlan {
                     description: "Stand tall and march in place, lifting your knees alternately while swinging your arms naturally.",
                     seconds: 60
                 ),
-
                 SwitchVibeExercise(
                     name: "Side Movement",
                     imageName: "side Movement",
@@ -46,7 +48,7 @@ private enum SwitchVibePlan {
             ]
 
         case 10:
-            // Original 10-minute plan: 2 + 6 + 2 minutes.
+            // 10-minute plan: 2 + 6 + 2 minutes.
             return [
                 SwitchVibeExercise(
                     name: "Warm-up",
@@ -54,14 +56,12 @@ private enum SwitchVibePlan {
                     description: "Move gently to warm up your body. Relax your shoulders and prepare for movement.",
                     seconds: 120
                 ),
-
                 SwitchVibeExercise(
                     name: "Alternating Arm and Leg Swings",
                     imageName: "arm and leg swings Exercise",
                     description: "Stand tall, swing one arm forward with the opposite leg, then switch sides while maintaining your balance.",
                     seconds: 360
                 ),
-
                 SwitchVibeExercise(
                     name: "Cool-down",
                     imageName: "cool-down Exercise",
@@ -71,7 +71,7 @@ private enum SwitchVibePlan {
             ]
 
         default:
-            // Original 5-minute plan: 1 + 2 + 1 + 1 minutes.
+            // 5-minute plan: 1 + 2 + 1 + 1 minutes.
             return [
                 SwitchVibeExercise(
                     name: "Marching",
@@ -79,21 +79,18 @@ private enum SwitchVibePlan {
                     description: "Stand tall and march in place, lifting your knees alternately to a comfortable height while swinging your arms naturally.",
                     seconds: 60
                 ),
-
                 SwitchVibeExercise(
                     name: "Standing Hamstring Curls",
                     imageName: "standing Hamstring Curls",
                     description: "Stand tall, bend one knee to bring your heel toward your buttocks, then lower and alternate legs.",
                     seconds: 120
                 ),
-
                 SwitchVibeExercise(
                     name: "Knee Lifts",
                     imageName: "knee lifts",
                     description: "Stand tall, lift one knee forward to a comfortable height, then lower it slowly and alternate legs.",
                     seconds: 60
                 ),
-
                 SwitchVibeExercise(
                     name: "Cool-down",
                     imageName: "cool-down Exercise",
@@ -106,45 +103,39 @@ private enum SwitchVibePlan {
 }
 
 // MARK: - Switch My Vibe Workout Screen
-// One reusable screen supports all three session durations.
+
 struct workoutView: View {
 
     // MARK: - Shared Garden Progress
 
     @EnvironmentObject var gardenManager: GardenProgressManager
 
-    // Keep the existing initializer used by TimePageView.
+    // Keep the initializer used by TimePageView.
     let selectedMood: String
     let durationMinutes: Int
 
-    // Use the original exercise plan for the selected duration.
     private let exercises: [SwitchVibeExercise]
 
-    // Store ACTIVE workout time only.
-    // Break seconds are never subtracted from this value.
+    // Count only active workout seconds.
+    // Breaks never reduce this timer.
     @State private var secondsRemaining: Int
 
     // MARK: - Pause State
 
     @State private var isPaused = false
 
-    // MARK: - Exercise Break State
+    // MARK: - Break State
 
-    // Give users 20 seconds before the next exercise.
     private let breakDuration = 20
 
     @State private var isOnBreak = false
     @State private var breakSecondsRemaining = 0
 
-    // MARK: - End Confirmation State
+    // MARK: - End Confirmation
 
-    // Show Bloomove's existing custom confirmation page.
     @State private var showEndConfirmation = false
-
-    // Remember the pause state before opening confirmation.
     @State private var wasPausedBeforeConfirmation = false
 
-    // Wait for the confirmation page to close before navigating.
     @State private var finishEarlyAfterDismiss = false
     @State private var resumeAfterDismiss = false
 
@@ -156,10 +147,11 @@ struct workoutView: View {
 
     @State private var earnedMinutes = 0
 
-    // Prevent the same workout from being rewarded twice.
+    // Use a unique ID to prevent duplicate workout rewards.
     @State private var workoutSessionID = UUID().uuidString
 
-    // Publish one timer event per second.
+    // MARK: - Timer
+
     private let timer = Timer.publish(
         every: 1,
         on: .main,
@@ -172,7 +164,6 @@ struct workoutView: View {
         selectedMood: String = "Switch My Vibe",
         durationMinutes: Int = 5
     ) {
-
         self.selectedMood = selectedMood
         self.durationMinutes = durationMinutes
 
@@ -188,20 +179,18 @@ struct workoutView: View {
 
     // MARK: - Time Calculations
 
-    // Calculate the total ACTIVE exercise duration.
     private var totalSeconds: Int {
         exercises.reduce(0) {
             $0 + $1.seconds
         }
     }
 
-    // Count completed active exercise seconds.
     private var elapsedSeconds: Int {
         totalSeconds - secondsRemaining
     }
 
-    // Find the current exercise using cumulative exercise durations.
-    // During a break, this automatically selects the NEXT exercise.
+    // Find the current exercise using cumulative durations.
+    // During a break, display the upcoming exercise.
     private var currentExerciseIndex: Int {
 
         guard !exercises.isEmpty else {
@@ -211,7 +200,6 @@ struct workoutView: View {
         var accumulatedSeconds = 0
 
         for (index, exercise) in exercises.enumerated() {
-
             accumulatedSeconds += exercise.seconds
 
             if elapsedSeconds < accumulatedSeconds {
@@ -226,7 +214,6 @@ struct workoutView: View {
         exercises[currentExerciseIndex]
     }
 
-    // Calculate the overall workout progress.
     private var progress: Double {
 
         guard totalSeconds > 0 else {
@@ -248,7 +235,6 @@ struct workoutView: View {
         showCompletion || showEarlyCompletion
     }
 
-    // Convert seconds to MM:SS.
     private func formatTime(_ seconds: Int) -> String {
         String(
             format: "%02d:%02d",
@@ -257,7 +243,41 @@ struct workoutView: View {
         )
     }
 
-    // MARK: - Main Screen
+    // MARK: - Bloomove Colors
+
+    // MARK: - Bloomove Colors
+    // Match Easy Flow and Bloom with Energy.
+
+    private let accent = Color(
+        red: 184/255,
+        green: 76/255,
+        blue: 112/255
+    )
+
+    private let workoutBackground = Color(
+        red: 254/255,
+        green: 249/255,
+        blue: 243/255
+    )
+
+    private let darkGreen = Color(
+        red: 32/255,
+        green: 61/255,
+        blue: 46/255
+    )
+
+    private let mutedGreen = Color(
+        red: 89/255,
+        green: 102/255,
+        blue: 94/255
+    )
+
+    private let lightGreen = Color(
+        red: 234/255,
+        green: 239/255,
+        blue: 225/255
+    )
+    // MARK: - Workout Screen
 
     var body: some View {
 
@@ -268,7 +288,7 @@ struct workoutView: View {
 
             VStack(spacing: 8) {
 
-                // MARK: Workout Title
+                // MARK: - Workout Category
 
                 Text(selectedMood)
                     .font(.system(size: 30))
@@ -277,18 +297,13 @@ struct workoutView: View {
 
                 if isOnBreak {
 
-                    // Show the next exercise before it starts.
+                    // Show an upcoming-exercise announcement.
                     Text("Up Next")
                         .font(.system(size: 23, weight: .bold))
-                        .foregroundStyle(
-                            Color(
-                                red: 184/255,
-                                green: 76/255,
-                                blue: 112/255
-                            )
-                        )
+                        .foregroundStyle(accent)
 
-                    Text(currentExercise.durationLabel)
+                    // Show the exercise name without its duration.
+                    Text(currentExercise.name)
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(Theme.textDark)
                         .multilineTextAlignment(.center)
@@ -299,18 +314,21 @@ struct workoutView: View {
 
                 } else {
 
-                    // Show the name and duration of the active exercise.
-                    Text(currentExercise.durationLabel)
-                        .font(.system(size: 16))
+                    // MARK: - Exercise Name
+                    // Display only the exercise name above the image.
+                    // Example: "Side Movement", not "1 min Side Movement".
+
+                    Text(currentExercise.name)
+                        .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(Theme.textDark)
                         .multilineTextAlignment(.center)
                 }
 
                 Spacer(minLength: 8)
 
-                // MARK: Exercise Image
+                // MARK: - Exercise Image
+                // Keep the team's original image for each exercise.
 
-                // The image automatically changes at each exercise boundary.
                 Image(currentExercise.imageName)
                     .resizable()
                     .scaledToFit()
@@ -321,7 +339,7 @@ struct workoutView: View {
                     )
                     .id(currentExerciseIndex)
 
-                // MARK: Exercise Instructions
+                // MARK: - Exercise Instructions
 
                 Text(currentExercise.description)
                     .font(.system(size: 13))
@@ -332,22 +350,26 @@ struct workoutView: View {
 
                 Spacer(minLength: 8)
 
+                // MARK: - Exercise Duration Label
+                // Show the duration of the CURRENT exercise.
+                // Do not display the total workout duration here.
+
                 if isOnBreak {
 
                     Text("Starting in")
-                        .font(.system(size: 16))
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(Theme.textDark)
 
                 } else {
 
-                    Text("\(durationMinutes) Min Workout")
-                        .font(.system(size: 13))
+                    Text(currentExercise.durationLabel)
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Theme.textMuted)
                 }
 
                 // MARK: - Circular Timer
+                // Keep the existing workout and break countdown logic.
 
-                // Show the break countdown or the active workout countdown.
                 ZStack {
 
                     Circle()
@@ -390,8 +412,8 @@ struct workoutView: View {
                 .padding(.top, 10)
 
                 // MARK: - Workout Controls
+                // Use identical 72x72 circular controls.
 
-                // Allow Pause/Resume and End during exercises and breaks.
                 HStack {
 
                     controlButton(
@@ -416,7 +438,6 @@ struct workoutView: View {
             }
             .padding(.horizontal, 24)
         }
-
         .navigationBarBackButtonHidden(true)
 
         // MARK: - Timer Updates
@@ -425,7 +446,7 @@ struct workoutView: View {
             tick()
         }
 
-        // Keep the phone screen awake during the workout.
+        // Keep the screen awake during workout sessions.
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
         }
@@ -436,12 +457,11 @@ struct workoutView: View {
 
         // MARK: - Custom End Confirmation
 
-        // Show the original "You're Doing Great!" page.
         .fullScreenCover(
             isPresented: $showEndConfirmation,
             onDismiss: {
 
-                // Open the result only after the confirmation closes.
+                // Navigate only after the confirmation screen closes.
                 if finishEarlyAfterDismiss {
 
                     finishEarlyAfterDismiss = false
@@ -449,7 +469,6 @@ struct workoutView: View {
 
                 } else if resumeAfterDismiss {
 
-                    // Return to the same exercise and remaining time.
                     resumeAfterDismiss = false
                     isPaused = wasPausedBeforeConfirmation
                 }
@@ -460,13 +479,11 @@ struct workoutView: View {
                 totalMinutes: durationMinutes,
                 completedMinutes: elapsedSeconds / 60,
 
-                // Continue from the exact moment the user stopped.
                 onKeepExercising: {
                     resumeAfterDismiss = true
                     showEndConfirmation = false
                 },
 
-                // Confirm ending the session early.
                 onEndWorkout: {
                     finishEarlyAfterDismiss = true
                     showEndConfirmation = false
@@ -477,7 +494,6 @@ struct workoutView: View {
 
         // MARK: - Full Workout Completion
 
-        // Open the existing Bloomove completion screen.
         .navigationDestination(isPresented: $showCompletion) {
 
             CompletionView(
@@ -499,7 +515,6 @@ struct workoutView: View {
 
         // MARK: - Early Workout Completion
 
-        // Open the original "You Did Your Best!" screen.
         .navigationDestination(isPresented: $showEarlyCompletion) {
 
             EarlyCompletionView(
@@ -521,11 +536,12 @@ struct workoutView: View {
 
         // MARK: - Interactive Garden
 
-        // Use the same saved garden progress as HomePage.
         .sheet(isPresented: $showGarden) {
 
             NavigationStack {
-                TarfahGardenView(gardenManager: gardenManager)
+                TarfahGardenView(
+                    gardenManager: gardenManager
+                )
             }
         }
     }
@@ -534,10 +550,10 @@ struct workoutView: View {
 
     private func openEndConfirmation() {
 
-        // Remember whether the user had already paused.
+        // Remember the user's original pause state.
         wasPausedBeforeConfirmation = isPaused
 
-        // Freeze all countdowns before opening the confirmation.
+        // Stop active and break timers during confirmation.
         isPaused = true
 
         showEndConfirmation = true
@@ -547,14 +563,14 @@ struct workoutView: View {
 
     private func tick() {
 
-        // Never count while paused, confirming, or showing results.
+        // Do not count while paused, confirming, or completed.
         guard !isPaused,
               !showEndConfirmation,
               !hasEnded else {
             return
         }
 
-        // MARK: Break Countdown
+        // MARK: - Break Countdown
 
         if isOnBreak {
 
@@ -564,16 +580,16 @@ struct workoutView: View {
 
             } else {
 
-                // Start the next exercise automatically.
+                // Automatically start the next exercise.
                 breakSecondsRemaining = 0
                 isOnBreak = false
             }
 
-            // Breaks do not count toward activity minutes.
+            // Breaks never increase earned activity minutes.
             return
         }
 
-        // MARK: Active Exercise Countdown
+        // MARK: - Active Exercise Countdown
 
         guard secondsRemaining > 0 else {
             return
@@ -581,13 +597,13 @@ struct workoutView: View {
 
         secondsRemaining -= 1
 
-        // Show the completion page after the final exercise.
+        // Finish after all active exercise seconds are completed.
         if secondsRemaining == 0 {
             finishWorkout()
             return
         }
 
-        // Start a break after each exercise except the last.
+        // Show a break after each exercise except the final one.
         if isExerciseBoundary {
             startExerciseBreak()
         }
@@ -595,8 +611,6 @@ struct workoutView: View {
 
     // MARK: - Exercise Boundary Detection
 
-    // Use the original duration of every exercise.
-    // Exclude the last exercise to avoid an unnecessary final break.
     private var isExerciseBoundary: Bool {
 
         var accumulatedSeconds = 0
@@ -620,7 +634,7 @@ struct workoutView: View {
         isOnBreak = true
         breakSecondsRemaining = breakDuration
 
-        // Play the same sound used in the other Bloomove categories.
+        // Play the original sound at exercise transitions.
         AudioServicesPlaySystemSound(1005)
     }
 
@@ -630,7 +644,7 @@ struct workoutView: View {
 
         earnedMinutes = totalSeconds / 60
 
-        // Record activity minutes and update garden progress.
+        // Save full activity minutes and update the garden.
         gardenManager.recordWorkout(
             id: workoutSessionID,
             completedMinutes: earnedMinutes
@@ -644,7 +658,7 @@ struct workoutView: View {
     private func finishEarly() {
 
         // Save completed full minutes only.
-        // The 20-second breaks never increase earned minutes.
+        // Exclude the 20-second exercise breaks.
         earnedMinutes = elapsedSeconds / 60
 
         if earnedMinutes > 0 {
@@ -660,19 +674,19 @@ struct workoutView: View {
 
     // MARK: - Return Home
 
-    // HomePage listens for this notification.
-    // It closes the entire workout navigation flow.
     private func returnHome() {
 
+        // HomePage handles this notification.
         NotificationCenter.default.post(
             name: Notification.Name("BloomoveReturnHome"),
             object: nil
         )
     }
 
-    // MARK: - Reusable Workout Control
+    // MARK: - Unified Workout Controls
+    // Both buttons are exactly 72x72 points.
+    // The same dimensions can be used by other workout categories.
 
-    // Use the original green circular Pause and End buttons.
     private func controlButton(
         icon: String,
         label: String,
@@ -684,24 +698,28 @@ struct workoutView: View {
             Button(action: action) {
 
                 Image(systemName: icon)
-                    .font(.system(size: 26))
+                    .font(.system(size: 25, weight: .semibold))
                     .foregroundStyle(Theme.textDark)
-                    .frame(width: 68, height: 68)
-                    .background(Theme.greenLight)
-                    .clipShape(Circle())
+                    .frame(width: 72, height: 72)
+                    .background(
+                        Theme.greenLight,
+                        in: Circle()
+                    )
+                    .contentShape(Circle())
             }
             .buttonStyle(.plain)
 
             Text(label)
-                .font(.system(size: 13))
+                .font(.system(size: 14))
                 .foregroundStyle(Theme.textDark)
         }
+        .frame(width: 100)
     }
 }
 
 // MARK: - Switch My Vibe Preparation Screen
-// Shows the selected workout duration before starting.
-// The countdown begins only after the user taps Start Now.
+// Show the selected workout time before starting.
+// The actual countdown starts after the user taps Start Now.
 
 struct SwitchMyVibeReadyView: View {
 
@@ -709,7 +727,6 @@ struct SwitchMyVibeReadyView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    // Controls navigation to the active workout.
     @State private var showWorkout = false
 
     // MARK: - Bloomove Colors
@@ -768,9 +785,7 @@ struct SwitchMyVibeReadyView: View {
                 Spacer()
 
                 // MARK: - Selected Duration
-
-                // This is a static preview of the selected time.
-                // The workout timer starts on the next screen.
+                // This is a static time preview, not an active timer.
 
                 ZStack {
 
@@ -797,11 +812,10 @@ struct SwitchMyVibeReadyView: View {
 
                 Spacer()
 
-                // MARK: - Start Workout Button
+                // MARK: - Start Workout
 
                 Button {
 
-                    // Open the selected workout.
                     showWorkout = true
 
                 } label: {
@@ -821,16 +835,14 @@ struct SwitchMyVibeReadyView: View {
             .padding(.horizontal, 24)
         }
 
-        // MARK: - Native Apple Back Button
+        // MARK: - Native Navigation
 
-        // Keep the default system back button available.
         .navigationBarBackButtonHidden(false)
         .toolbar(.visible, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
 
         // MARK: - Workout Navigation
 
-        // Pass the selected duration to the existing workout system.
         .navigationDestination(isPresented: $showWorkout) {
 
             workoutView(
@@ -842,7 +854,6 @@ struct SwitchMyVibeReadyView: View {
 }
 
 // MARK: - Preview
-// Preview the 5-minute Switch My Vibe workout.
 
 #Preview {
     NavigationStack {

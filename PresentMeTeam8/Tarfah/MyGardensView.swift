@@ -36,8 +36,10 @@ struct MyGardensView: View {
                                     VStack(alignment: .leading, spacing: 6) {
                                         Text("Garden \(index + 1)")
                                             .font(.headline)
+                                            .foregroundStyle(BloomoveColors.darkGreen)
                                         
                                         Text("\(garden.flowers.count) Flowers")
+                                            .foregroundStyle(BloomoveColors.darkGreen)
                                             .font(.subheadline)
                                             .foregroundStyle(BloomoveColors.secondaryText)
                                     }
@@ -45,10 +47,13 @@ struct MyGardensView: View {
                                     Spacer()
                                     
                                     Image(systemName: "chevron.right")
-                                        .foregroundStyle(BloomoveColors.primaryPink)
+                                        .foregroundStyle(BloomoveColors.darkGreen)
                                 }
                                 .padding()
-                                .background(Color.white)
+                                .background(
+                                    Color(red: 234/255, green: 239/255, blue: 225/255),
+                                    in: RoundedRectangle(cornerRadius: 20)
+                                )
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                                 
                             }

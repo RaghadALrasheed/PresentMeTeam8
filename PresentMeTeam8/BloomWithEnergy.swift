@@ -4,34 +4,64 @@ import Combine
 import AudioToolbox
 
 // MARK: - Bloom with Energy Colors
-// Defines the colors used across the workout screens.
+// Use the official Bloomove color palette.
+
 enum Palette {
-    static let accent = Color(red: 184/255, green: 76/255, blue: 112/255)
-    static let background = Color(red: 254/255, green: 249/255, blue: 243/255)
-    static let title = Color(red: 32/255, green: 61/255, blue: 46/255)
-    static let subtitle = Color(red: 89/255, green: 102/255, blue: 94/255)
-    static let ringFill = Color(red: 234/255, green: 239/255, blue: 225/255)
+
+    static let accent = Color(
+        red: 184/255,
+        green: 76/255,
+        blue: 112/255
+    )
+
+    static let background = Color(
+        red: 254/255,
+        green: 249/255,
+        blue: 243/255
+    )
+
+    static let title = Color(
+        red: 32/255,
+        green: 61/255,
+        blue: 46/255
+    )
+
+    static let subtitle = Color(
+        red: 89/255,
+        green: 102/255,
+        blue: 94/255
+    )
+
+    static let ringFill = Color(
+        red: 234/255,
+        green: 239/255,
+        blue: 225/255
+    )
 }
 
 // MARK: - Exercise Model
-// Stores the name, image, and instructions for each exercise.
+// Store each exercise's name, image, and instructions.
+
 struct WorkoutExercise: Identifiable {
+
     let id = UUID()
     let name: String
     let imageName: String
     let instruction: String
 }
 
-// MARK: - Bloom with Energy Plan
-// Keeps the five original exercises and their asset names.
+// MARK: - Bloom with Energy Workout Plan
+// Preserve all five exercises and their existing image assets.
+
 enum WorkoutPlan {
 
     static let moodTitle = "Bloom with Energy"
 
-    // This category supports longer sessions.
+    // This category supports three workout durations.
     static let supportedMinutes = [10, 15, 30]
 
     static let exercises: [WorkoutExercise] = [
+
         WorkoutExercise(
             name: "Warm-up",
             imageName: "warm-up",
@@ -65,48 +95,71 @@ enum WorkoutPlan {
 }
 
 // MARK: - Time Formatter
-// Converts seconds into MM:SS format.
+// Convert seconds to MM:SS.
+
 func timeString(_ seconds: Int) -> String {
-    String(format: "%02d:%02d", seconds / 60, seconds % 60)
+
+    String(
+        format: "%02d:%02d",
+        seconds / 60,
+        seconds % 60
+    )
 }
 
 // MARK: - Root Navigation
-// Allows a parent screen to provide an action for returning Home.
+// Keep compatibility with the existing Home navigation flow.
+
 private struct PopToRootKey: EnvironmentKey {
+
     static let defaultValue: () -> Void = {}
 }
 
 extension EnvironmentValues {
+
     var popToRoot: () -> Void {
-        get { self[PopToRootKey.self] }
-        set { self[PopToRootKey.self] = newValue }
+
+        get {
+            self[PopToRootKey.self]
+        }
+
+        set {
+            self[PopToRootKey.self] = newValue
+        }
     }
 }
 
 // MARK: - Workout Preparation Screen
-// Displays the selected duration before starting the workout.
+// Show the chosen session duration before starting.
+
 struct WorkoutStartPage: View {
 
     let minutes: Int
 
     @Environment(\.dismiss) private var dismiss
 
-    // Controls navigation to the workout session.
     @State private var showSession = false
 
     var body: some View {
+
         ZStack {
-            Palette.background.ignoresSafeArea()
+
+            Palette.background
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
 
-                // Return to the time selection page.
+                // MARK: - Back Button
+
                 HStack {
+
                     Button {
                         dismiss()
                     } label: {
+
                         HStack(spacing: 4) {
+
                             Image(systemName: "chevron.left")
+
                             Text("Back")
                         }
                         .font(.system(size: 16))
@@ -115,6 +168,8 @@ struct WorkoutStartPage: View {
 
                     Spacer()
                 }
+
+                // MARK: - Workout Title
 
                 Text(WorkoutPlan.moodTitle)
                     .font(.system(size: 30))
@@ -128,13 +183,19 @@ struct WorkoutStartPage: View {
 
                 Spacer()
 
-                // Show the session duration before the countdown begins.
+                // MARK: - Selected Session Duration
+                // This is a static preview, not a running countdown.
+
                 ZStack {
+
                     Circle()
                         .fill(Palette.ringFill)
 
                     Circle()
-                        .stroke(Palette.subtitle, lineWidth: 3)
+                        .stroke(
+                            Palette.subtitle,
+                            lineWidth: 3
+                        )
 
                     Text(timeString(minutes * 60))
                         .font(.system(size: 48))
@@ -145,10 +206,14 @@ struct WorkoutStartPage: View {
 
                 Spacer()
 
-                // Start the selected workout.
+                // MARK: - Start Now Button
+
                 Button {
+
                     showSession = true
+
                 } label: {
+
                     Text("Start Now")
                         .font(.title3)
                         .fontWeight(.bold)
@@ -167,122 +232,145 @@ struct WorkoutStartPage: View {
         }
         .navigationBarBackButtonHidden(true)
 
-        // Pass the selected duration to the workout.
+        // MARK: - Workout Navigation
+
         .navigationDestination(isPresented: $showSession) {
+
             WorkoutSessionPage(minutes: minutes)
         }
     }
 }
 
 // MARK: - Workout Session Screen
-// Manages workout time, exercise breaks, and completion screens.
+// Manage exercises, breaks, pause/resume, and garden rewards.
+
 struct WorkoutSessionPage: View {
 
     let minutes: Int
 
-    // Use the shared garden progress manager.
+    // MARK: - Shared Garden Progress
+
     @EnvironmentObject var gardenManager: GardenProgressManager
 
-    // Use the navigation callback provided by HomePage.
+    // Keep compatibility with the existing navigation environment.
     @Environment(\.popToRoot) private var popToRoot
 
-    // Identify each workout session to prevent duplicate rewards.
+    // A unique session ID prevents duplicate activity rewards.
     @State private var workoutSessionID = UUID().uuidString
 
-    // Store remaining ACTIVE workout seconds.
-    // Exercise breaks never decrease this value.
+    // Store ACTIVE workout time only.
+    // Exercise breaks do not reduce this time.
     @State private var remaining: Int
 
-    // Control pause and resume.
+    // MARK: - Pause State
+
     @State private var isPaused = false
 
-    // MARK: - Exercise Break State
+    // MARK: - Break State
 
-    // Every transition between exercises has a 10-second break.
+    // Give the user 20 seconds before the next exercise.
     private let breakDuration = 20
 
-    // Determine whether the break screen is displayed.
     @State private var isOnBreak = false
-
-    // Count down the transition between exercises.
     @State private var breakSecondsRemaining = 0
 
     // MARK: - End Confirmation State
 
-    // Show the original "You're Doing Great!" screen.
     @State private var showEndConfirmation = false
-
-    // Remember whether the workout was paused before confirmation.
     @State private var wasPausedBeforeConfirmation = false
 
-    // Wait for the confirmation screen to close before navigating.
     @State private var finishEarlyAfterDismiss = false
-
-    // Restore the previous pause state after Keep Exercising.
     @State private var resumeAfterDismiss = false
 
-    // MARK: - Result Navigation
+    // MARK: - Completion Navigation
 
     @State private var showCompletion = false
     @State private var showEarlyCompletion = false
     @State private var showGarden = false
 
-    // Store the number of completed full minutes.
     @State private var earnedMinutes = 0
 
-    // Publish a timer event every second.
+    // MARK: - Timer
+
     private let timer = Timer.publish(
         every: 1,
         on: .main,
         in: .common
     ).autoconnect()
 
-    // Reuse the original exercises created by the team.
+    // MARK: - Exercises
+
     private let exercises = WorkoutPlan.exercises
 
-    // Initialize the countdown with the selected duration.
+    // MARK: - Initialization
+
     init(minutes: Int) {
+
         self.minutes = minutes
-        _remaining = State(initialValue: minutes * 60)
+
+        _remaining = State(
+            initialValue: minutes * 60
+        )
     }
 
     // MARK: - Workout Calculations
 
-    // Total active workout time in seconds.
+    // Total active workout duration in seconds.
     private var total: Int {
         minutes * 60
     }
 
-    // Completed active workout time in seconds.
+    // Completed active workout seconds.
     private var elapsed: Int {
         total - remaining
     }
 
-    // Divide the session into five equal exercise durations.
-    // 10 minutes: 2 minutes per exercise.
-    // 15 minutes: 3 minutes per exercise.
-    // 30 minutes: 6 minutes per exercise.
+    // Divide the workout into five equal exercise segments.
+    //
+    // 10-minute workout: 2 minutes per exercise.
+    // 15-minute workout: 3 minutes per exercise.
+    // 30-minute workout: 6 minutes per exercise.
     private var segment: Int {
         max(1, total / exercises.count)
     }
 
-    // Select the exercise based on completed active seconds.
+    // MARK: - Current Exercise
+
+    // During a break, display the upcoming exercise.
     private var index: Int {
-        min(elapsed / segment, exercises.count - 1)
+
+        min(
+            elapsed / segment,
+            exercises.count - 1
+        )
     }
 
-    // Get the active exercise or the upcoming exercise during a break.
     private var current: WorkoutExercise {
         exercises[index]
     }
 
-    // Show progress without including break time.
+    // MARK: - Current Exercise Duration
+    // Show the duration of ONE exercise, not the whole session.
+
+    private var currentExerciseDuration: String {
+
+        let exerciseMinutes = segment / 60
+
+        return "\(exerciseMinutes) Min"
+    }
+
+    // MARK: - Workout Progress
+
+    // Break time does not affect activity progress.
     private var progress: CGFloat {
-        guard total > 0 else { return 0 }
+
+        guard total > 0 else {
+            return 0
+        }
+
         return CGFloat(elapsed) / CGFloat(total)
     }
 
-    // Stop the countdown after a workout result is displayed.
     private var hasEnded: Bool {
         showCompletion || showEarlyCompletion
     }
@@ -290,73 +378,94 @@ struct WorkoutSessionPage: View {
     // MARK: - Main Screen
 
     var body: some View {
+
         ZStack {
-            Palette.background.ignoresSafeArea()
+
+            Palette.background
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
 
-                // Switch between the active exercise and the break screen.
+                // Display either the exercise or the transition break.
                 if isOnBreak {
+
                     exerciseBreakContent
+
                 } else {
+
                     activeExerciseContent
                 }
 
-                // Keep Pause and End available during exercises and breaks.
+                // Keep the controls visible during workouts and breaks.
                 workoutControls
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 12)
         }
-        .animation(.easeInOut(duration: 0.3), value: isOnBreak)
-        .sensoryFeedback(.impact, trigger: index)
+
+        .animation(
+            .easeInOut(duration: 0.3),
+            value: isOnBreak
+        )
+
+        .sensoryFeedback(
+            .impact,
+            trigger: index
+        )
+
         .navigationBarBackButtonHidden(true)
 
-        // Update the active workout or break countdown.
+        // MARK: - Timer Updates
+
         .onReceive(timer) { _ in
             tick()
         }
 
-        // Keep the screen awake while the workout is in use.
+        // Keep the screen awake during the session.
         .onAppear {
+
             UIApplication.shared.isIdleTimerDisabled = true
         }
 
-        // Restore the normal device sleep behavior after leaving.
         .onDisappear {
+
             UIApplication.shared.isIdleTimerDisabled = false
         }
 
-        // MARK: - Original End Confirmation
+        // MARK: - Custom End Confirmation
 
-        // Show the existing Bloomove confirmation design.
-        // Do not record minutes until End Anyway is confirmed.
         .fullScreenCover(
             isPresented: $showEndConfirmation,
             onDismiss: {
-                // Finish the session only after the cover has closed.
-                // This prevents conflicting SwiftUI presentations.
+
+                // Navigate only after the confirmation has closed.
                 if finishEarlyAfterDismiss {
+
                     finishEarlyAfterDismiss = false
                     endWorkout()
+
                 } else if resumeAfterDismiss {
+
                     resumeAfterDismiss = false
+
+                    // Restore the previous pause state.
                     isPaused = wasPausedBeforeConfirmation
                 }
             }
         ) {
+
             EndWorkoutConfirmationView(
                 totalMinutes: minutes,
                 completedMinutes: elapsed / 60,
 
-                // Return to the same exercise and saved time.
                 onKeepExercising: {
+
                     resumeAfterDismiss = true
                     showEndConfirmation = false
                 },
 
-                // Confirm early ending and navigate to the result screen.
                 onEndWorkout: {
+
                     finishEarlyAfterDismiss = true
                     showEndConfirmation = false
                 }
@@ -364,18 +473,20 @@ struct WorkoutSessionPage: View {
             .interactiveDismissDisabled(true)
         }
 
-        // MARK: - Normal Completion
+        // MARK: - Full Workout Completion
 
-        // Display the existing achievement page after finishing.
         .navigationDestination(isPresented: $showCompletion) {
+
             CompletionView(
                 gardenManager: gardenManager,
                 workoutSessionID: workoutSessionID,
                 completedMinutes: earnedMinutes,
                 flowerProgressMinutes: gardenManager.currentFlowerProgress,
+
                 onViewGarden: {
                     showGarden = true
                 },
+
                 onBackHome: {
                     returnHome()
                 }
@@ -383,18 +494,20 @@ struct WorkoutSessionPage: View {
             .navigationBarBackButtonHidden(true)
         }
 
-        // MARK: - Early Completion
+        // MARK: - Early Workout Completion
 
-        // Display the early achievement page after End Anyway.
         .navigationDestination(isPresented: $showEarlyCompletion) {
+
             EarlyCompletionView(
                 gardenManager: gardenManager,
                 workoutSessionID: workoutSessionID,
                 completedMinutes: earnedMinutes,
                 flowerProgressMinutes: gardenManager.currentFlowerProgress,
+
                 onViewGarden: {
                     showGarden = true
                 },
+
                 onBackHome: {
                     returnHome()
                 }
@@ -404,60 +517,82 @@ struct WorkoutSessionPage: View {
 
         // MARK: - Interactive Garden
 
-        // Open the real garden with the same saved progress.
         .sheet(isPresented: $showGarden) {
+
             NavigationStack {
-                TarfahGardenView(gardenManager: gardenManager)
+
+                TarfahGardenView(
+                    gardenManager: gardenManager
+                )
             }
         }
     }
 
     // MARK: - Active Exercise Layout
+    // Display the exercise name without a duration prefix.
+    // Show the current exercise duration above the circular timer.
 
-    // Show the current exercise name, image, instructions, and timer.
     private var activeExerciseContent: some View {
+
         VStack(spacing: 0) {
 
+            // MARK: - Category Title
+
             Text(WorkoutPlan.moodTitle)
-                .font(.system(size: 28))
+                .font(.system(size: 30))
                 .foregroundColor(Palette.title)
-                .padding(.top, 40)
+                .padding(.top, 18)
 
-            Text("\(segment / 60) Min \(current.name)")
-                .font(.system(size: 14))
-                .foregroundColor(Palette.subtitle)
-                .padding(.top, 6)
+            // MARK: - Exercise Name
+            // Example: "Brisk Marching", not "2 Min Brisk Marching".
 
-            Spacer()
+            Text(current.name)
+                .font(.system(size: 17, weight: .medium))
+                .foregroundColor(Palette.title)
+                .multilineTextAlignment(.center)
+                .padding(.top, 8)
+
+            Spacer(minLength: 8)
+
+            // MARK: - Exercise Image
 
             Image(current.imageName)
                 .resizable()
                 .scaledToFit()
-                .frame(maxHeight: 260)
+                .frame(maxWidth: .infinity)
+                .frame(maxHeight: 280)
                 .id(index)
+
+            // MARK: - Exercise Instructions
 
             Text(current.instruction)
                 .font(.system(size: 13))
                 .foregroundColor(Palette.subtitle)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 30)
-                .padding(.top, 16)
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            Text("\(minutes) Min")
-                .font(.system(size: 13))
-                .foregroundColor(Palette.title)
+            // MARK: - Current Exercise Duration
+            // Show only the active exercise's duration.
+            // Do not show the total workout duration here.
 
-            // Display the ACTIVE session countdown.
+            Text(currentExerciseDuration)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(Palette.subtitle)
+
+            // MARK: - Circular Workout Timer
+
             ZStack {
+
                 Circle()
                     .fill(Palette.ringFill)
 
                 Circle()
                     .stroke(
-                        Palette.subtitle.opacity(0.2),
-                        lineWidth: 3
+                        Palette.subtitle.opacity(0.25),
+                        lineWidth: 4
                     )
 
                 Circle()
@@ -465,7 +600,7 @@ struct WorkoutSessionPage: View {
                     .stroke(
                         Palette.subtitle,
                         style: StrokeStyle(
-                            lineWidth: 3,
+                            lineWidth: 4,
                             lineCap: .round
                         )
                     )
@@ -475,89 +610,125 @@ struct WorkoutSessionPage: View {
                         value: remaining
                     )
 
+                // Keep the overall ACTIVE session countdown.
                 Text(timeString(remaining))
-                    .font(.system(size: 30))
+                    .font(.system(size: 32, weight: .medium))
                     .monospacedDigit()
                     .foregroundColor(Palette.title)
                     .transaction {
                         $0.animation = nil
                     }
             }
-            .frame(width: 130, height: 130)
-            .padding(.top, 8)
+            .frame(width: 145, height: 145)
+            .padding(.top, 10)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
     }
 
     // MARK: - Exercise Break Layout
+    // Show the next exercise and a 20-second countdown.
 
-    // Preview the NEXT exercise while the active workout is paused.
     private var exerciseBreakContent: some View {
-        VStack(spacing: 12) {
+
+        VStack(spacing: 8) {
 
             Text(WorkoutPlan.moodTitle)
-                .font(.system(size: 26))
+                .font(.system(size: 30))
                 .foregroundColor(Palette.title)
-                .padding(.top, 30)
-
-            Text("Up Next")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundColor(Palette.accent)
                 .padding(.top, 18)
 
+            Text("Up Next")
+                .font(.system(size: 23, weight: .bold))
+                .foregroundColor(Palette.accent)
+                .padding(.top, 8)
+
+            // Show the name only, without its duration.
             Text(current.name)
-                .font(.system(size: 22, weight: .semibold))
+                .font(.system(size: 17, weight: .medium))
                 .foregroundColor(Palette.title)
                 .multilineTextAlignment(.center)
 
             Text("Get ready for your next move!")
-                .font(.system(size: 15))
+                .font(.system(size: 14))
                 .foregroundColor(Palette.subtitle)
 
             Spacer(minLength: 8)
 
-            // Show the upcoming exercise image.
+            // MARK: - Upcoming Exercise Image
+
             Image(current.imageName)
                 .resizable()
                 .scaledToFit()
+                .frame(maxWidth: .infinity)
                 .frame(maxHeight: 230)
+                .id(index)
 
-            // Show the upcoming exercise instructions.
+            // MARK: - Upcoming Exercise Instructions
+
             Text(current.instruction)
                 .font(.system(size: 13))
                 .foregroundColor(Palette.subtitle)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 12)
+                .padding(.top, 8)
 
             Spacer(minLength: 8)
 
             Text("Starting in")
-                .font(.system(size: 17))
-                .foregroundColor(Palette.subtitle)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(Palette.title)
 
-            // Count down 10 seconds before starting the next exercise.
+            // MARK: - Circular Break Countdown
+
             ZStack {
+
                 Circle()
                     .fill(Palette.ringFill)
 
                 Circle()
-                    .stroke(Palette.subtitle, lineWidth: 3)
+                    .stroke(
+                        Palette.subtitle.opacity(0.25),
+                        lineWidth: 4
+                    )
+
+                Circle()
+                    .trim(
+                        from: 0,
+                        to: Double(
+                            breakDuration - breakSecondsRemaining
+                        ) / Double(breakDuration)
+                    )
+                    .stroke(
+                        Palette.subtitle,
+                        style: StrokeStyle(
+                            lineWidth: 4,
+                            lineCap: .round
+                        )
+                    )
+                    .rotationEffect(.degrees(-90))
 
                 Text(timeString(breakSecondsRemaining))
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.system(size: 32, weight: .medium))
                     .monospacedDigit()
                     .foregroundColor(Palette.title)
             }
-            .frame(width: 125, height: 125)
-            .padding(.bottom, 10)
+            .frame(width: 145, height: 145)
+            .padding(.top, 10)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
     }
 
-    // MARK: - Shared Workout Controls
+    // MARK: - Workout Controls
+    // Use the same dimensions as Switch My Vibe and Easy Flow.
 
-    // Reuse the same Pause and End buttons during exercises and breaks.
     private var workoutControls: some View {
+
         HStack {
 
             circleButton(
@@ -573,56 +744,65 @@ struct WorkoutSessionPage: View {
                 icon: "stop.fill",
                 label: "End"
             ) {
-                // Save the existing pause state before showing confirmation.
+
+                // Remember the pause state before confirmation.
                 wasPausedBeforeConfirmation = isPaused
+
                 isPaused = true
                 showEndConfirmation = true
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.top, 8)
+        .padding(.horizontal, 24)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
     }
 
     // MARK: - Timer Logic
 
-    // Handle the workout and break countdown with one timer.
     private func tick() {
 
-        // Do not count while paused, confirming, or viewing results.
+        // Never count while paused, confirming, or finished.
         guard !isPaused,
               !showEndConfirmation,
               !hasEnded else {
             return
         }
 
-        // Count down the break without reducing workout minutes.
+        // MARK: - Break Countdown
+
         if isOnBreak {
 
             if breakSecondsRemaining > 1 {
+
                 breakSecondsRemaining -= 1
+
             } else {
+
+                // Start the next exercise automatically.
                 breakSecondsRemaining = 0
                 isOnBreak = false
             }
 
+            // Break time never counts as active movement.
             return
         }
+
+        // MARK: - Active Workout Countdown
 
         guard remaining > 0 else {
             return
         }
 
-        // Decrease active workout time by one second.
         remaining -= 1
 
-        // Complete the session immediately after the final exercise.
+        // Complete the session after the last active second.
         if remaining == 0 {
             finishWorkout()
             return
         }
 
-        // Start a break whenever an exercise segment is completed.
-        // No break is shown after the final exercise.
+        // Start a 20-second break between exercise segments.
+        // There is no break after the final exercise.
         if elapsed % segment == 0 && elapsed < total {
             startExerciseBreak()
         }
@@ -630,22 +810,22 @@ struct WorkoutSessionPage: View {
 
     // MARK: - Start Exercise Break
 
-    // Pause active workout time and prepare the upcoming exercise.
     private func startExerciseBreak() {
+
         isOnBreak = true
         breakSecondsRemaining = breakDuration
 
-        // Play a short system notification sound.
-        // Device volume and silent mode may affect playback.
+        // Play the existing exercise transition sound.
         AudioServicesPlaySystemSound(1005)
     }
 
-    // MARK: - Normal Workout Completion
+    // MARK: - Full Workout Completion
 
-    // Save the full session once and open the achievement screen.
     private func finishWorkout() {
+
         earnedMinutes = minutes
 
+        // Record the session once using its unique ID.
         gardenManager.recordWorkout(
             id: workoutSessionID,
             completedMinutes: earnedMinutes
@@ -656,12 +836,14 @@ struct WorkoutSessionPage: View {
 
     // MARK: - Early Workout Completion
 
-    // Record only completed full minutes after End Anyway.
-    // Time spent on exercise breaks is never included.
     private func endWorkout() {
+
+        // Reward only completed active minutes.
+        // Exercise breaks are excluded.
         earnedMinutes = elapsed / 60
 
         if earnedMinutes > 0 {
+
             gardenManager.recordWorkout(
                 id: workoutSessionID,
                 completedMinutes: earnedMinutes
@@ -672,46 +854,60 @@ struct WorkoutSessionPage: View {
     }
 
     // MARK: - Return Home
-    // Notify HomePage to close the entire workout navigation flow.
-    // This returns the user directly Home after a workout.
+
     private func returnHome() {
+
+        // Notify HomePage to close the workout flow.
         NotificationCenter.default.post(
             name: Notification.Name("BloomoveReturnHome"),
             object: nil
         )
     }
 
-    // MARK: - Reusable Control Button
+    // MARK: - Unified Workout Control
+    // Pause, Resume, and End use matching 72x72 circles.
 
-    // Keep Pause, Resume, and End buttons visually consistent.
     private func circleButton(
         icon: String,
         label: String,
         action: @escaping () -> Void
     ) -> some View {
-        VStack(spacing: 4) {
+
+        VStack(spacing: 8) {
+
             Button(action: action) {
+
                 Image(systemName: icon)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(Palette.subtitle)
-                    .frame(width: 48, height: 48)
-                    .background(
-                        Circle().fill(Palette.ringFill)
+                    .font(
+                        .system(
+                            size: 25,
+                            weight: .semibold
+                        )
                     )
+                    .foregroundColor(Palette.title)
+                    .frame(width: 72, height: 72)
+                    .background(
+                        Palette.ringFill,
+                        in: Circle()
+                    )
+                    .contentShape(Circle())
             }
             .buttonStyle(.plain)
 
             Text(label)
-                .font(.system(size: 11))
+                .font(.system(size: 14))
                 .foregroundColor(Palette.title)
         }
+        .frame(width: 100)
     }
 }
 
 // MARK: - Xcode Preview
-// Preview a supported Bloom with Energy workout duration.
+
 #Preview {
+
     NavigationStack {
+
         WorkoutStartPage(minutes: 10)
             .environmentObject(GardenProgressManager())
     }
